@@ -57,9 +57,28 @@
 - `npm run lint` (frontend) — PASSED (0 errors, 0 warnings).
 - `npm run build` (frontend) — PASSED (production bundle built cleanly).
 
+---
+
+## [2026-08-03] — Phase 4: News
+
+### Files Created / Modified
+- `backend/src/models/News.js`: Mongoose `News` schema (`title`, `source`, `url` [unique index], `publishedAt` [index], `companySymbol` [index], `summary`) with compound index on `(companySymbol, publishedAt)`.
+- `backend/src/services/newsService.js`: News ingestion service executing `bulkWrite` with `updateOne` + `upsert: true` on `url` to prevent duplicate article ingestion, 1.5s timeout wrapper, fallback generator, and paginated query handler.
+- `backend/src/controllers/newsController.js`: Express handlers for `GET /api/news/:symbol` and `POST /api/news/:symbol/ingest`.
+- `backend/src/routes/newsRoutes.js`: Express router mounting news endpoints.
+- `backend/src/tests/news.test.js`: Jest & Supertest integration suite verifying zero duplicate document creation on repeated ingestion runs, pagination metadata, and empty array response for unknown symbols.
+- `frontend/src/components/NewsFeed.jsx`: Financial news feed widget displaying source pills, published dates, summaries, external article links, on-demand refresh button, and page navigation controls.
+- `frontend/src/App.jsx`: Integrated NewsFeed into research workspace.
+
+### Verification Commands Run
+- `npm test` (backend) — PASSED (22/22 integration tests green across news, stocks, auth, and health suites).
+- `npm run lint` (backend) — PASSED (0 errors, 0 warnings).
+- `npm run lint` (frontend) — PASSED (0 errors, 0 warnings).
+- `npm run build` (frontend) — PASSED (production bundle built cleanly).
+
 ### Known Issues
 - None.
 
 ### Next-Phase Readiness
-- Phase 3 checklist is 100% complete and verified.
-- Ready for **Phase 4: News**.
+- Phase 4 checklist is 100% complete and verified.
+- Ready for **Phase 5: ML Research — Financial News Sentiment Classifier**.
