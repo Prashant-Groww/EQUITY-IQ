@@ -5,6 +5,7 @@ const logger = require('./utils/logger');
 const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const stockRoutes = require('./routes/stockRoutes');
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(pinoHttp({ logger }));
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/stocks', stockRoutes);
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {
