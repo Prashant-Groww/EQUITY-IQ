@@ -3,6 +3,7 @@ import { Activity, Server, Cpu, Database, CheckCircle2, XCircle, RefreshCw, Tren
 import StockSearch from './components/StockSearch';
 import StockChart from './components/StockChart';
 import FinancialMetrics from './components/FinancialMetrics';
+import NewsFeed from './components/NewsFeed';
 
 export default function App() {
   const [backendStatus, setBackendStatus] = useState({ loading: true, online: false, data: null });
@@ -77,10 +78,11 @@ export default function App() {
 
       {/* Main Research Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 flex flex-col gap-8">
-        {/* Phase 3 Stock Section */}
-        <section className="flex flex-col gap-6">
+        {/* Stock Data & News Feed Section */}
+        <section className="flex flex-col gap-8">
           <StockChart symbol={activeSymbol} />
           <FinancialMetrics symbol={activeSymbol} />
+          <NewsFeed symbol={activeSymbol} />
         </section>
 
         {/* Microservice System Nodes Status Bar */}
@@ -118,7 +120,7 @@ export default function App() {
               <div className="flex items-center gap-3">
                 <Cpu className="h-5 w-5 text-indigo-400" />
                 <div>
-                  <div className="text-xs font-bold text-white">AI Engine Engine</div>
+                  <div className="text-xs font-bold text-white">AI Engine Service</div>
                   <div className="text-[11px] text-slate-400 font-mono">Python FastAPI (:8000)</div>
                 </div>
               </div>
@@ -142,8 +144,8 @@ export default function App() {
               <div className="flex items-center gap-3">
                 <Database className="h-5 w-5 text-emerald-400" />
                 <div>
-                  <div className="text-xs font-bold text-white">Database & Cache Layer</div>
-                  <div className="text-[11px] text-slate-400 font-mono">MongoDB + TTL Cache</div>
+                  <div className="text-xs font-bold text-white">Database & Vector Store</div>
+                  <div className="text-[11px] text-slate-400 font-mono">MongoDB + News Store</div>
                 </div>
               </div>
               <span className="text-[11px] text-emerald-400 flex items-center gap-1 font-bold">
@@ -156,7 +158,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
-        EquityIQ AI Assistant — Phase 3 Live Stock Data Research Workspace
+        EquityIQ AI Assistant — Phase 4 News Research Workspace
       </footer>
     </div>
   );
