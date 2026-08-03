@@ -37,9 +37,29 @@
 - `npm test` (backend) — PASSED (12/12 integration tests green across auth & health suites).
 - `npm run lint` (backend) — PASSED (0 errors, 0 warnings).
 
+---
+
+## [2026-08-03] — Phase 3: Stock Data
+
+### Files Created / Modified
+- `backend/src/services/stockService.js`: Stock market service featuring `node-cache` TTL caching (5 min for quotes/search, 15 min for history/financials), 2.0s fast timeout guard, structured `[CACHE HIT]` & `[CACHE MISS]` logging, and fallback data provider for offline resilience.
+- `backend/src/controllers/stockController.js`: Express controller handlers for `GET /api/stocks/search`, `GET /api/stocks/:symbol/quote`, `GET /api/stocks/:symbol/history`, and `GET /api/stocks/:symbol/financials`.
+- `backend/src/routes/stockRoutes.js`: Router mounting stock data API endpoints.
+- `backend/src/tests/stocks.test.js`: Jest integration suite covering ticker search, real-time quotes, historical price series, fundamental metrics, and TTL cache hits.
+- `frontend/src/components/StockSearch.jsx`: Debounced ticker search component with live dropdown suggestion menu.
+- `frontend/src/components/StockChart.jsx`: Recharts interactive area price chart with time-range selectors (1D, 1W, 1M, 1Y, 5Y).
+- `frontend/src/components/FinancialMetrics.jsx`: Financial metrics cards grid for Market Cap, P/E Ratio, EPS, Revenue, 52W High/Low, and Dividend Yield.
+- `frontend/src/App.jsx`: Updated main research dashboard layout.
+
+### Verification Commands Run
+- `npm test` (backend) — PASSED (18/18 integration tests green across stocks, auth, and health suites).
+- `npm run lint` (backend) — PASSED (0 errors, 0 warnings).
+- `npm run lint` (frontend) — PASSED (0 errors, 0 warnings).
+- `npm run build` (frontend) — PASSED (production bundle built cleanly).
+
 ### Known Issues
 - None.
 
 ### Next-Phase Readiness
-- Phase 2 checklist is 100% complete and verified.
-- Ready for **Phase 3: Stock Data**.
+- Phase 3 checklist is 100% complete and verified.
+- Ready for **Phase 4: News**.
