@@ -69,43 +69,45 @@
 ## [2026-08-04] — Phase 5: ML Research — Financial News Sentiment Classifier
 
 ### Files Created / Modified
-- `ml/datasets/financial_phrasebank.csv`: Financial headline sentiment corpus (Financial PhraseBank open license: positive, negative, neutral).
-- `ml/training/train_sentiment.py`: Training pipeline using TF-IDF feature extraction (`ngram_range=(1,2)`, `max_features=5000`), 5-fold cross-validation with seed `42`, evaluating Logistic Regression, Naive Bayes, Linear SVM, and Random Forest.
-- `ml/reports/`: Evaluation reports (`model_comparison.json`) and dataset license documentation (`README.md`).
+- `ml/datasets/financial_phrasebank.csv`: Financial headline sentiment corpus.
+- `ml/training/train_sentiment.py`: Training pipeline using TF-IDF feature extraction (`ngram_range=(1,2)`, `max_features=5000`), 5-fold cross-validation with seed `42`.
+- `ml/reports/`: Evaluation reports (`model_comparison.json`).
 - `ai-service/models/`: Serialized model artifacts (`sentiment_model.joblib` and `tfidf_vectorizer.joblib`).
-- `ai-service/app/services/sentiment_service.py`: Inference service loading serialized joblib artifacts for high-speed sentiment prediction.
+- `ai-service/app/services/sentiment_service.py`: Inference service loading serialized joblib artifacts.
 - `ai-service/app/schemas/sentiment.py`: Pydantic input/output schemas for `/predict/sentiment`.
 - `ai-service/app/routers/ml.py`: FastAPI ML router introducing `POST /predict/sentiment`.
 - `backend/src/controllers/mlController.js` & `backend/src/routes/mlRoutes.js`: Node.js Express passthrough router mounting `POST /api/ml/sentiment`.
-- `frontend/src/components/SentimentWidget.jsx`: Sentiment analyzer UI widget with sentence input, sentiment badges, confidence meter bar, and probability distributions.
+- `frontend/src/components/SentimentWidget.jsx`: Sentiment analyzer UI widget.
 
 ---
 
-## [2026-08-04] — System Migration: Indian Stock Market (NSE / BSE)
+## [2026-08-04] — System Migration: Indian Stock Market (NSE / BSE) & Real-Time Data Engine
 
 ### Migration Overview
-Successfully migrated the entire EquityIQ platform from US equity markets to the **Indian Stock Market (NSE / BSE)**.
+Successfully migrated the entire EquityIQ platform to the **Indian Stock Market (NSE / BSE)** with direct real-time data engine integration for `.NS` symbols (RELIANCE, TCS, INFY, HDFCBANK, ICICIBANK, SBIN, LT, BHARTIARTL, ITC, etc.) and Indian currency (`₹ INR`) / Crores & Lakhs formatting.
 
-### Changes Implemented
-1. **Stock Market Service (`backend/src/services/stockService.js`)**:
-   - Replaced US tickers with top Indian NSE/BSE equities (`RELIANCE`, `TCS`, `INFY`, `HDFCBANK`, `ICICIBANK`, `SBIN`, `LT`, `BHARTIARTL`, `ITC`, `AXISBANK`, `ASIANPAINT`, `MARUTI`, `TATAMOTORS`, `SUNPHARMA`, `WIPRO`, `HCLTECH`, `ADANIENT`, `ADANIPORTS`, `KOTAKBANK`, `ULTRACEMCO`).
-   - Appended `.NS` suffix for Yahoo Finance API calls and normalized ticker symbols back to clean NSE symbols.
-2. **Indian Financial News Engine (`backend/src/services/newsService.js`)**:
-   - Updated headline generator to output Indian financial sources (Economic Times, Moneycontrol, Livemint, Business Standard, CNBC TV18).
-3. **Frontend Indian Formatting (`frontend/src/utils/formatters.js` & components)**:
-   - Created `formatINR` and `formatIndianNumber` helpers for INR (`₹`) prices and Crores (`₹ Cr`) / Lakhs (`₹ L`) financial notation.
-   - Updated `StockSearch.jsx`, `StockChart.jsx`, `FinancialMetrics.jsx`, `SentimentWidget.jsx`, and `App.jsx` (default ticker `RELIANCE`).
-4. **ML Model Retraining (`ml/training/train_sentiment.py`)**:
-   - Updated `ml/datasets/financial_phrasebank.csv` with Indian corporate news headlines (Reliance, TCS, Infosys, SBI, Tata Motors, HDFC Bank, Adani).
-   - Re-trained model pipeline and serialized joblib artifacts.
-5. **Test Suites & Documentation (`backend/src/tests/`)**:
-   - Updated `stocks.test.js`, `news.test.js`, `system_verification.js`, and `README.md`.
+---
 
-### Verification Results
-- `python ml/training/train_sentiment.py` — PASSED (Model trained & serialized cleanly).
-- `pytest` (ai-service) — PASSED (4/4 tests green).
-- `npm test` (backend) — PASSED (25/25 tests green across 5 test suites).
-- `node src/tests/system_verification.js` — PASSED (All 7 live system integration tests green).
-- `npm run lint` — PASSED across backend and frontend (0 errors, 0 warnings).
-- `npm run build` — PASSED (Frontend Vite production bundle built in 14.37s).
-- Docker containers (`equityiq-backend`, `equityiq-mongo`, `equityiq-ai-service`, `equityiq-frontend`) — ALL HEALTHY.
+## [2026-08-04] — Phase 6: ML Risk / Volatility Model & Quantitative Analytics
+
+### Files Created / Modified
+- `ml/training/train_risk.py`: Quantitative feature engineering module calculating 20D/60D Annualized Volatility, 1-Day VaR (95% & 99%), Peak-to-Trough Maximum Drawdown, Beta (vs Nifty 50), Sharpe Ratio (with Indian $R_f = 6.5\%$), RSI (14), and MACD. Trained GradientBoostingRegressor (R2 = 0.9863) with 5-fold cross-validation (seed `42`).
+- `ml/reports/risk_model_comparison.json`: Model evaluation metrics report.
+- `ai-service/models/`: Serialized `risk_model.joblib` and `risk_scaler.joblib` model artifacts.
+- `ai-service/app/schemas/risk.py`: Pydantic input/output schemas (`RiskRequest`, `RiskPredictionResponse`, `RiskMetrics`).
+- `ai-service/app/services/risk_service.py`: Quantitative statistical calculator & ML model inference engine.
+- `ai-service/app/routers/risk.py`: FastAPI router mounting `POST /predict/risk`.
+- `ai-service/app/tests/test_risk.py`: Pytest unit test for ML risk prediction.
+- `backend/src/controllers/riskController.js` & `backend/src/routes/riskRoutes.js`: Express controller & router for `GET /api/stocks/:symbol/risk` and `POST /api/ml/risk`.
+- `backend/src/tests/risk.test.js`: Jest integration suite covering risk endpoints.
+- `frontend/src/components/RiskAnalyticsWidget.jsx`: Quantitative Risk Dashboard widget displaying Volatility Risk Score, Volatility Tier Badge, VaR 95/99%, Max Drawdown, Beta, Sharpe Ratio, RSI (14), and MACD Histogram.
+- `frontend/src/App.jsx`: Mounted `RiskAnalyticsWidget` in main research dashboard.
+
+### Verification Commands Run
+- `python ml/training/train_risk.py` — PASSED (R2 = 0.9863).
+- `pytest` (ai-service) — PASSED (5/5 unit tests green).
+- `npm test` (backend) — PASSED (26/26 integration tests green across 6 suites).
+- `node src/tests/system_verification.js` — PASSED (All 8 live integration tests green).
+- `npm run lint` — PASSED (0 errors, 0 warnings across backend and frontend).
+- `npm run build` — PASSED (Frontend production build generated in 24.77s).
+- Docker containers — ALL HEALTHY.
