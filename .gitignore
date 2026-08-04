@@ -17,6 +17,7 @@ env.bak/
 venv.bak/
 *.pkl
 *.joblib
+!ai-service/models/*.joblib
 
 # Testing & Coverage
 coverage/
