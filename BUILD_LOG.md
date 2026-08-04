@@ -129,13 +129,27 @@ Successfully migrated the entire EquityIQ platform to the **Indian Stock Market 
 - `backend/src/controllers/ragController.js`: Express controller gathering MongoDB context (News, Reports, Stock Quote/Financials) and querying FastAPI AI RAG engine.
 - `backend/src/routes/ragRoutes.js`: Express router mounting `POST /api/ml/rag-query`.
 - `backend/src/tests/rag.test.js`: Jest integration test suite for RAG retrieval endpoints.
-- `frontend/src/components/RAGContextWidget.jsx`: Interactive RAG Semantic Research & Knowledge Search UI widget featuring search query input bar with preset prompts, relevance match score badges, source attribution tags, and synthesized RAG context answer card.
-- `frontend/src/App.jsx`: Mounted `RAGContextWidget` in main research workspace.
+- `frontend/src/components/RAGContextWidget.jsx`: Interactive RAG Semantic Research & Knowledge Search UI widget.
+
+---
+
+## [2026-08-04] — Phase 9: AI Chat Assistant (Interactive Equity Research Copilot)
+
+### Files Created / Modified
+- `ai-service/app/schemas/chat.py`: Pydantic schemas (`ChatMessage`, `ChatRequest`, `ChatResponse`).
+- `ai-service/app/services/chat_service.py`: Intent classification engine (`INVESTMENT_RECOMMENDATION`, `RISK_ANALYSIS`, `FINANCIAL_EARNINGS`, `MARKET_SENTIMENT`) and context synthesizer.
+- `ai-service/app/routers/chat.py`: FastAPI router mounting `POST /predict/chat`.
+- `ai-service/app/tests/test_chat.py`: Pytest unit test suite verifying conversation response generation.
+- `backend/src/controllers/chatController.js`: Express controller gathering stock price and risk tier context, forwarding queries to FastAPI AI chat engine.
+- `backend/src/routes/chatRoutes.js`: Express router mounting `POST /api/ml/chat`.
+- `backend/src/tests/chat.test.js`: Jest integration test suite for AI chat copilot endpoints.
+- `frontend/src/components/AIChatCopilotWidget.jsx`: Interactive Conversational Assistant Window featuring message thread, user/assistant speech bubbles, quick action prompt chips, typing indicator, and auto-scroll.
+- `frontend/src/App.jsx`: Mounted `AIChatCopilotWidget` in research workspace layout.
 
 ### Verification Commands Run
-- `pytest` (ai-service) — PASSED (7/7 unit tests green).
-- `npm test` (backend) — PASSED (31/31 integration tests green across 8 suites).
-- `node src/tests/system_verification.js` — PASSED (All 10 live integration tests green).
+- `pytest` (ai-service) — PASSED (8/8 unit tests green).
+- `npm test` (backend) — PASSED (33/33 integration tests green across 9 suites).
+- `node src/tests/system_verification.js` — PASSED (All 11 live integration tests green).
 - `npm run lint` — PASSED (0 errors, 0 warnings across backend and frontend).
-- `npm run build` — PASSED (Frontend production build generated in 18.89s).
+- `npm run build` — PASSED (Frontend production build generated in 14.21s).
 - Docker containers — ALL HEALTHY.
