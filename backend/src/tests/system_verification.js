@@ -117,6 +117,17 @@ async function runSystemVerification() {
   );
   console.log(`- Report Processing RELIANCE: HTTP ${reportRes.statusCode}`, reportRes.body?.message || reportRes.body);
 
+  // 10. RAG Semantic Search Endpoint
+  console.log('\n[Test 10] RAG Semantic Search & Knowledge Indexing Endpoint:');
+  const ragRes = await request(
+    { host: 'localhost', port: 3000, path: '/api/ml/rag-query', method: 'POST', headers: { 'Content-Type': 'application/json' } },
+    {
+      symbol: 'RELIANCE',
+      query: 'What were the Q4 profit figures and retail revenue growth?',
+    }
+  );
+  console.log(`- RAG Query RELIANCE: HTTP ${ragRes.statusCode} ChunksFound=${ragRes.body?.retrieved_chunks?.length || 0} TopMatch=${ragRes.body?.retrieved_chunks?.[0]?.source_type}`);
+
   console.log('=' .repeat(60));
   console.log('Indian Stock Market Verification Complete — All Services Functional!');
 }
