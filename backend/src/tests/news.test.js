@@ -5,7 +5,7 @@ const newsService = require('../services/newsService');
 
 jest.setTimeout(15000);
 
-describe('Phase 4 — News Integration & Deduplication Tests', () => {
+describe('Phase 4 — News Integration & Deduplication Tests (Indian Equities)', () => {
   let inMemoryNews = [];
 
   beforeEach(() => {
@@ -66,14 +66,14 @@ describe('Phase 4 — News Integration & Deduplication Tests', () => {
   describe('News Ingestion & Deduplication', () => {
     it('ingesting the same news batch twice produces ZERO duplicate documents', async () => {
       // First ingestion pass
-      const firstRes = await newsService.ingestNewsForSymbol('AAPL');
-      const firstCount = await News.countDocuments({ companySymbol: 'AAPL' });
+      const firstRes = await newsService.ingestNewsForSymbol('RELIANCE');
+      const firstCount = await News.countDocuments({ companySymbol: 'RELIANCE' });
       expect(firstRes.upsertedCount).toBeGreaterThan(0);
       expect(firstCount).toBe(firstRes.upsertedCount);
 
       // Second ingestion pass with identical batch
-      const secondRes = await newsService.ingestNewsForSymbol('AAPL');
-      const secondCount = await News.countDocuments({ companySymbol: 'AAPL' });
+      const secondRes = await newsService.ingestNewsForSymbol('RELIANCE');
+      const secondCount = await News.countDocuments({ companySymbol: 'RELIANCE' });
 
       // Count MUST remain identical (zero new documents added)
       expect(secondRes.upsertedCount).toBe(0);
@@ -82,21 +82,21 @@ describe('Phase 4 — News Integration & Deduplication Tests', () => {
     });
 
     it('POST /api/news/:symbol/ingest on-demand route triggers deduplicated ingestion', async () => {
-      const res = await request(app).post('/api/news/MSFT/ingest');
+      const res = await request(app).post('/api/news/TCS/ingest');
       expect(res.statusCode).toBe(200);
       expect(res.body).toHaveProperty('message');
       expect(res.body).toHaveProperty('result');
-      expect(res.body.result).toHaveProperty('symbol', 'MSFT');
+      expect(res.body.result).toHaveProperty('symbol', 'TCS');
     });
   });
 
   describe('GET /api/news/:symbol (Pagination & Unknown Symbols)', () => {
     beforeEach(async () => {
-      await newsService.ingestNewsForSymbol('AAPL');
+      await newsService.ingestNewsForSymbol('RELIANCE');
     });
 
     it('returns paginated news with correct page size and metadata', async () => {
-      const res = await request(app).get('/api/news/AAPL?page=1&limit=3');
+      const res = await request(app).get('/api/news/RELIANCE?page=1&limit=3');
       expect(res.statusCode).toBe(200);
       expect(res.body).toHaveProperty('news');
       expect(res.body).toHaveProperty('pagination');

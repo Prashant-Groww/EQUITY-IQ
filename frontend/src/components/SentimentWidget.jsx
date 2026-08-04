@@ -3,7 +3,7 @@ import { Brain, Sparkles, TrendingUp, TrendingDown, Minus, Loader2 } from 'lucid
 
 export default function SentimentWidget() {
   const [inputText, setInputText] = useState(
-    'Company announces record quarterly revenue and expanded gross operating margins.'
+    'Reliance Industries Q4 net profit rises 18% YoY driven by robust retail and O2C growth.'
   );
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -69,25 +69,25 @@ export default function SentimentWidget() {
           </div>
           <div>
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              ML Financial Sentiment Classifier
+              ML Indian Equity Sentiment Classifier
               <span className="text-[10px] font-mono font-normal px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                TF-IDF + LinearSVM
+                TF-IDF + LogisticRegression
               </span>
             </h3>
-            <p className="text-xs text-slate-400">Classifies financial news headlines into sentiment signals</p>
+            <p className="text-xs text-slate-400">Classifies Indian corporate & news headlines into market signals</p>
           </div>
         </div>
       </div>
 
       {/* Analyzer Input Box */}
       <div className="flex flex-col gap-3">
-        <label className="text-xs font-medium text-slate-300">Test Financial News Sentence</label>
+        <label className="text-xs font-medium text-slate-300">Test Financial News Sentence (Indian Equities)</label>
         <div className="flex gap-3">
           <input
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="Type any financial headline to test ML classification..."
+            placeholder="Type any Indian financial headline to test ML classification..."
             className="flex-1 bg-[#0F172A] border border-slate-800 focus:border-purple-500 rounded-xl px-4 py-3 text-slate-100 text-sm focus:outline-none transition font-medium"
           />
           <button
@@ -107,24 +107,24 @@ export default function SentimentWidget() {
 
         {/* Preset Sample Headlines */}
         <div className="flex items-center gap-2 flex-wrap text-xs text-slate-400 mt-1">
-          <span className="text-slate-500 font-medium">Try presets:</span>
+          <span className="text-slate-500 font-medium font-mono">Presets:</span>
           <button
-            onClick={() => handleSampleClick('NVIDIA revenue surges 260% year over year on soaring AI demand')}
+            onClick={() => handleSampleClick('Reliance Industries Q4 net profit rises 18% on robust retail growth')}
             className="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition text-[11px]"
           >
-            &quot;NVIDIA revenue surges 260%...&quot;
+            &quot;Reliance Q4 net profit rises 18%...&quot;
           </button>
           <button
-            onClick={() => handleSampleClick('Operating margins shrank severely due to inflation and rising costs')}
+            onClick={() => handleSampleClick('Infosys lowers annual revenue guidance due to delayed US tech spending')}
             className="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition text-[11px]"
           >
-            &quot;Margins shrank severely...&quot;
+            &quot;Infosys lowers revenue guidance...&quot;
           </button>
           <button
-            onClick={() => handleSampleClick('The annual general meeting of shareholders will be held in London on May 10')}
+            onClick={() => handleSampleClick('State Bank of India operates over 22000 branches across all Indian states')}
             className="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition text-[11px]"
           >
-            &quot;Annual general meeting held...&quot;
+            &quot;State Bank of India operates 22k branches...&quot;
           </button>
         </div>
       </div>

@@ -9,7 +9,7 @@ import SentimentWidget from './components/SentimentWidget';
 export default function App() {
   const [backendStatus, setBackendStatus] = useState({ loading: true, online: false, data: null });
   const [aiStatus, setAiStatus] = useState({ loading: true, online: false, data: null });
-  const [activeSymbol, setActiveSymbol] = useState('AAPL');
+  const [activeSymbol, setActiveSymbol] = useState('RELIANCE');
 
   const checkHealth = async () => {
     setBackendStatus((prev) => ({ ...prev, loading: true }));
@@ -42,7 +42,6 @@ export default function App() {
         setAiStatus({ loading: false, online: false, data: null });
       }
     } catch {
-      // If direct browser request is blocked, fallback to active AI status if backend is online
       setAiStatus({ loading: false, online: true, data: { status: 'ok', service: 'equityiq-ai-service' } });
     }
   };
@@ -61,10 +60,13 @@ export default function App() {
               <TrendingUp className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent flex items-center gap-2">
                 EquityIQ
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  NSE/BSE India
+                </span>
               </h1>
-              <p className="text-xs text-slate-400 font-medium">AI-Powered Equity Research Assistant</p>
+              <p className="text-xs text-slate-400 font-medium">AI-Powered Equity Research Assistant (Indian Stock Market)</p>
             </div>
           </div>
 
@@ -165,7 +167,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
-        EquityIQ AI Assistant — Research Workspace
+        EquityIQ AI Assistant — Indian Stock Market Research Workspace (NSE / BSE)
       </footer>
     </div>
   );

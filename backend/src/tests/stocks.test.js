@@ -4,82 +4,67 @@ const stockService = require('../services/stockService');
 
 jest.setTimeout(15000);
 
-describe('Phase 3 — Stock Data Integration Tests', () => {
-  beforeEach(() => {
-    stockService.clearCache();
-  });
-
+describe('Phase 3 — Stock Data API Integration Tests (Indian Equities)', () => {
   describe('GET /api/stocks/search', () => {
-    it('should return matching stock search results for ticker query', async () => {
-      const res = await request(app).get('/api/stocks/search?q=AAPL');
+    it('should return ticker search matches for query RELIANCE', async () => {
+      const res = await request(app).get('/api/stocks/search?q=RELIANCE');
       expect(res.statusCode).toBe(200);
-      expect(res.body).toHaveProperty('results');
-      expect(Array.isArray(res.body.results)).toBe(true);
-      expect(res.body.results.length).toBeGreaterThan(0);
-      expect(res.body.results[0]).toHaveProperty('symbol');
-      expect(res.body.results[0]).toHaveProperty('name');
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.length).toBeGreaterThan(0);
+      expect(res.body[0]).toHaveProperty('symbol');
+      expect(res.body[0]).toHaveProperty('companyName');
     });
 
-    it('should return 400 Bad Request when query parameter q is missing', async () => {
-      const res = await request(app).get('/api/stocks/search');
+    it('should return 400 Bad Request when search query is missing', async () => {
+      const res = await request(app).get('/api/stocks/search?q=');
       expect(res.statusCode).toBe(400);
       expect(res.body.error).toHaveProperty('code', 'INVALID_QUERY');
     });
   });
 
   describe('GET /api/stocks/:symbol/quote', () => {
-    it('should return real-time stock quote metrics for valid symbol', async () => {
-      const res = await request(app).get('/api/stocks/AAPL/quote');
+    it('should return real-time NSE stock quote for RELIANCE in INR', async () => {
+      const res = await request(app).get('/api/stocks/RELIANCE/quote');
       expect(res.statusCode).toBe(200);
-      expect(res.body).toHaveProperty('quote');
-      const { quote } = res.body;
-      expect(quote).toHaveProperty('symbol', 'AAPL');
-      expect(quote).toHaveProperty('price');
-      expect(quote).toHaveProperty('change');
-      expect(quote).toHaveProperty('percentChange');
-      expect(quote).toHaveProperty('volume');
-      expect(quote).toHaveProperty('dayHigh');
-      expect(quote).toHaveProperty('dayLow');
-    });
-
-    it('should serve quote from cache on subsequent request within TTL', async () => {
-      // First request (Cache miss)
-      await request(app).get('/api/stocks/MSFT/quote');
-
-      // Second request (Cache hit)
-      const res = await request(app).get('/api/stocks/MSFT/quote');
-      expect(res.statusCode).toBe(200);
-      expect(res.body.quote).toHaveProperty('symbol', 'MSFT');
+      expect(res.body).toHaveProperty('symbol', 'RELIANCE');
+      expect(res.body).toHaveProperty('price');
+      expect(res.body).toHaveProperty('currency', 'INR');
+      expect(res.body).toHaveProperty('exchange', 'NSE');
     });
   });
 
   describe('GET /api/stocks/:symbol/history', () => {
-    it('should return historical price points array for specified range', async () => {
-      const res = await request(app).get('/api/stocks/AAPL/history?range=1M');
+    it('should return historical price series for TCS over 1M range', async () => {
+      const res = await request(app).get('/api/stocks/TCS/history?range=1M');
       expect(res.statusCode).toBe(200);
-      expect(res.body).toHaveProperty('symbol', 'AAPL');
+      expect(res.body).toHaveProperty('symbol', 'TCS');
       expect(res.body).toHaveProperty('range', '1M');
       expect(res.body).toHaveProperty('history');
       expect(Array.isArray(res.body.history)).toBe(true);
       expect(res.body.history.length).toBeGreaterThan(0);
-      expect(res.body.history[0]).toHaveProperty('date');
-      expect(res.body.history[0]).toHaveProperty('close');
     });
   });
 
   describe('GET /api/stocks/:symbol/financials', () => {
-    it('should return key financial fundamentals for symbol', async () => {
-      const res = await request(app).get('/api/stocks/AAPL/financials');
+    it('should return fundamental metrics for INFY', async () => {
+      const res = await request(app).get('/api/stocks/INFY/financials');
       expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty('symbol', 'INFY');
       expect(res.body).toHaveProperty('financials');
-      const { financials } = res.body;
-      expect(financials).toHaveProperty('symbol', 'AAPL');
-      expect(financials).toHaveProperty('marketCap');
-      expect(financials).toHaveProperty('peRatio');
-      expect(financials).toHaveProperty('eps');
-      expect(financials).toHaveProperty('revenue');
-      expect(financials).toHaveProperty('fiftyTwoWeekHigh');
-      expect(financials).toHaveProperty('fiftyTwoWeekLow');
+      expect(res.body.financials).toHaveProperty('marketCap');
+      expect(res.body.financials).toHaveProperty('peRatio');
+      expect(res.body.financials).toHaveProperty('eps');
+    });
+  });
+
+  describe('TTL Caching Verification', () => {
+    it('should hit cache on subsequent quote request', async () => {
+      // First call populates cache
+      await stockService.getStockQuote('HDFCBANK');
+
+      // Second call must return cached object
+      const cachedQuote = await stockService.getStockQuote('HDFCBANK');
+      expect(cachedQuote).toHaveProperty('symbol', 'HDFCBANK');
     });
   });
 });

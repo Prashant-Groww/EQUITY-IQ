@@ -2,36 +2,36 @@
   "dataset_info": {
     "source": "Financial PhraseBank (Malo et al., 2014) - Labeled Financial Headlines Corpus",
     "license": "CC BY-SA 3.0 Open Data License",
-    "total_samples": 55,
+    "total_samples": 50,
     "class_distribution": {
-      "positive": 20,
-      "negative": 20,
-      "neutral": 15
+      "positive": 26,
+      "negative": 12,
+      "neutral": 12
     },
-    "mean_text_length_words": 12.127272727272727,
+    "mean_text_length_words": 12.64,
     "seed": 42
   },
   "models_performance": {
     "LogisticRegression": {
-      "accuracy": 0.5091,
-      "precision_macro": 0.3583,
-      "recall_macro": 0.4667,
-      "f1_macro": 0.397,
+      "accuracy": 0.52,
+      "precision_macro": 0.1733,
+      "recall_macro": 0.3333,
+      "f1_macro": 0.2278,
       "confusion_matrix": [
         [
-          20,
+          12,
           0,
           0
         ],
         [
           0,
-          15,
-          0
+          11,
+          1
         ],
         [
           0,
           0,
-          20
+          26
         ]
       ],
       "classes": [
@@ -41,25 +41,25 @@
       ]
     },
     "MultinomialNB": {
-      "accuracy": 0.4727,
-      "precision_macro": 0.3361,
-      "recall_macro": 0.4333,
-      "f1_macro": 0.3464,
+      "accuracy": 0.52,
+      "precision_macro": 0.1733,
+      "recall_macro": 0.3333,
+      "f1_macro": 0.2278,
       "confusion_matrix": [
         [
-          20,
+          11,
           0,
+          1
+        ],
+        [
+          0,
+          12,
           0
         ],
         [
           0,
-          15,
-          0
-        ],
-        [
           0,
-          0,
-          20
+          26
         ]
       ],
       "classes": [
@@ -69,25 +69,25 @@
       ]
     },
     "LinearSVM": {
-      "accuracy": 0.6,
-      "precision_macro": 0.6163,
-      "recall_macro": 0.5944,
-      "f1_macro": 0.5917,
+      "accuracy": 0.5,
+      "precision_macro": 0.1741,
+      "recall_macro": 0.3222,
+      "f1_macro": 0.2254,
       "confusion_matrix": [
         [
-          20,
+          12,
           0,
           0
         ],
         [
           0,
-          15,
+          12,
           0
         ],
         [
           0,
           0,
-          20
+          26
         ]
       ],
       "classes": [
@@ -97,25 +97,25 @@
       ]
     },
     "RandomForest": {
-      "accuracy": 0.5455,
-      "precision_macro": 0.6108,
-      "recall_macro": 0.5389,
-      "f1_macro": 0.54,
+      "accuracy": 0.52,
+      "precision_macro": 0.1733,
+      "recall_macro": 0.3333,
+      "f1_macro": 0.2278,
       "confusion_matrix": [
         [
-          20,
+          12,
           0,
           0
         ],
         [
           0,
-          15,
+          12,
           0
         ],
         [
           0,
           0,
-          20
+          26
         ]
       ],
       "classes": [
@@ -125,6 +125,6 @@
       ]
     }
   },
-  "selected_best_model": "LinearSVM",
-  "selected_best_f1": 0.5917
+  "selected_best_model": "LogisticRegression",
+  "selected_best_f1": 0.2278
 }

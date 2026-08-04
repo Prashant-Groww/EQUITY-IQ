@@ -21,13 +21,13 @@ const request = (options, postData) => {
 
 async function runSystemVerification() {
   console.log('=' .repeat(60));
-  console.log('EquityIQ System Infrastructure Verification');
+  console.log('EquityIQ Indian Stock Market System Verification');
   console.log('=' .repeat(60));
 
   const timestamp = Date.now();
   const testUser = {
-    name: 'Diagnostic User',
-    email: `diag_${timestamp}@equityiq.com`,
+    name: 'Indian Market Tester',
+    email: `india_tester_${timestamp}@equityiq.in`,
     password: 'SecurePassword123!',
   };
 
@@ -70,38 +70,38 @@ async function runSystemVerification() {
   });
   console.log(`- Status: HTTP ${profRes.statusCode}`, profRes.body);
 
-  // 5. Stock API Endpoints
-  console.log('\n[Test 5] Stock Market Endpoints:');
-  const searchRes = await request({ host: 'localhost', port: 3000, path: '/api/stocks/search?q=AAPL', method: 'GET' });
-  console.log(`- Search AAPL: HTTP ${searchRes.statusCode}`, searchRes.body ? `Found ${searchRes.body.count || searchRes.body.length || 0} items` : searchRes.rawBody);
+  // 5. Indian Stock Market API Endpoints
+  console.log('\n[Test 5] Indian Stock Market Endpoints (NSE):');
+  const searchRes = await request({ host: 'localhost', port: 3000, path: '/api/stocks/search?q=RELIANCE', method: 'GET' });
+  console.log(`- Search RELIANCE: HTTP ${searchRes.statusCode}`, searchRes.body ? `Found ${searchRes.body.length || 0} items` : searchRes.rawBody);
 
-  const quoteRes = await request({ host: 'localhost', port: 3000, path: '/api/stocks/AAPL/quote', method: 'GET' });
-  console.log(`- Quote AAPL: HTTP ${quoteRes.statusCode} Price=$${quoteRes.body?.price}`);
+  const quoteRes = await request({ host: 'localhost', port: 3000, path: '/api/stocks/RELIANCE/quote', method: 'GET' });
+  console.log(`- Quote RELIANCE: HTTP ${quoteRes.statusCode} Price=₹${quoteRes.body?.price} (${quoteRes.body?.exchange || 'NSE'})`);
 
-  const historyRes = await request({ host: 'localhost', port: 3000, path: '/api/stocks/AAPL/history?range=1M', method: 'GET' });
-  console.log(`- History AAPL: HTTP ${historyRes.statusCode} DataPoints=${historyRes.body?.history?.length || 0}`);
+  const historyRes = await request({ host: 'localhost', port: 3000, path: '/api/stocks/TCS/history?range=1M', method: 'GET' });
+  console.log(`- History TCS: HTTP ${historyRes.statusCode} DataPoints=${historyRes.body?.history?.length || 0}`);
 
-  const finRes = await request({ host: 'localhost', port: 3000, path: '/api/stocks/AAPL/financials', method: 'GET' });
-  console.log(`- Financials AAPL: HTTP ${finRes.statusCode} MarketCap=$${finRes.body?.financials?.marketCap}`);
+  const finRes = await request({ host: 'localhost', port: 3000, path: '/api/stocks/INFY/financials', method: 'GET' });
+  console.log(`- Financials INFY: HTTP ${finRes.statusCode} MarketCap=₹${finRes.body?.financials?.marketCap}`);
 
-  // 6. News API Endpoints
-  console.log('\n[Test 6] News Integration Endpoints:');
-  const newsRes = await request({ host: 'localhost', port: 3000, path: '/api/news/AAPL?page=1&limit=3', method: 'GET' });
-  console.log(`- News Feed AAPL: HTTP ${newsRes.statusCode} TotalArticles=${newsRes.body?.pagination?.total || 0}`);
+  // 6. Indian News API Endpoints
+  console.log('\n[Test 6] Indian News Integration Endpoints:');
+  const newsRes = await request({ host: 'localhost', port: 3000, path: '/api/news/RELIANCE?page=1&limit=3', method: 'GET' });
+  console.log(`- News Feed RELIANCE: HTTP ${newsRes.statusCode} TotalArticles=${newsRes.body?.pagination?.total || 0}`);
 
-  const ingestRes = await request({ host: 'localhost', port: 3000, path: '/api/news/AAPL/ingest', method: 'POST' });
-  console.log(`- Ingest News AAPL: HTTP ${ingestRes.statusCode}`, ingestRes.body?.message || ingestRes.body);
+  const ingestRes = await request({ host: 'localhost', port: 3000, path: '/api/news/RELIANCE/ingest', method: 'POST' });
+  console.log(`- Ingest News RELIANCE: HTTP ${ingestRes.statusCode}`, ingestRes.body?.message || ingestRes.body);
 
-  // 7. ML Proxy Endpoints
-  console.log('\n[Test 7] ML Sentiment Classifier Endpoint:');
+  // 7. ML Proxy Endpoints (Indian Corporate Headline)
+  console.log('\n[Test 7] ML Sentiment Classifier Endpoint (Indian Headline):');
   const mlRes = await request(
     { host: 'localhost', port: 3000, path: '/api/ml/sentiment', method: 'POST', headers: { 'Content-Type': 'application/json' } },
-    { text: 'Apple reported record revenue growth and surging gross profit margins.' }
+    { text: 'Reliance Industries Q4 net profit rises 18% on robust retail and O2C growth.' }
   );
   console.log(`- ML Sentiment: HTTP ${mlRes.statusCode}`, mlRes.body);
 
   console.log('=' .repeat(60));
-  console.log('System Verification Complete — All Services Functional!');
+  console.log('Indian Stock Market Verification Complete — All Services Functional!');
 }
 
 runSystemVerification().catch(console.error);

@@ -11,7 +11,7 @@ const searchStocks = async (req, res, next) => {
     }
 
     const results = await stockService.searchStocks(q.trim());
-    res.status(200).json({ results });
+    res.status(200).json(results);
   } catch (err) {
     next(err);
   }
@@ -27,8 +27,8 @@ const getQuote = async (req, res, next) => {
       return next(error);
     }
 
-    const quote = await stockService.getQuote(symbol.trim());
-    res.status(200).json({ quote });
+    const quote = await stockService.getStockQuote(symbol.trim());
+    res.status(200).json(quote);
   } catch (err) {
     next(err);
   }
@@ -48,8 +48,8 @@ const getHistory = async (req, res, next) => {
       return next(error);
     }
 
-    const history = await stockService.getHistory(symbol.trim(), selectedRange);
-    res.status(200).json({ symbol: symbol.toUpperCase(), range: selectedRange, history });
+    const historyData = await stockService.getStockHistory(symbol.trim(), selectedRange);
+    res.status(200).json(historyData);
   } catch (err) {
     next(err);
   }
@@ -65,8 +65,8 @@ const getFinancials = async (req, res, next) => {
       return next(error);
     }
 
-    const financials = await stockService.getFinancials(symbol.trim());
-    res.status(200).json({ financials });
+    const financialsData = await stockService.getStockFinancials(symbol.trim());
+    res.status(200).json(financialsData);
   } catch (err) {
     next(err);
   }

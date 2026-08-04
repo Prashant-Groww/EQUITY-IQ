@@ -1,111 +1,59 @@
-# EquityIQ — AI-Powered Equity Research Assistant
+# EquityIQ — AI-Powered Equity Research Assistant (Indian Stock Market)
 
-EquityIQ is a full-stack, AI-powered equity research application. It brings together real-time market data, financial news, ML-driven sentiment analysis, ML-driven financial risk scoring, and a citation-backed Retrieval-Augmented Generation (RAG) chatbot grounded in SEC filings.
-
----
-
-## 🏗️ System Architecture
-
-```
-React (Vite/Tailwind) ──HTTP──▶ Node/Express API ──HTTP──▶ Python/FastAPI AI Service
-                                     │                              │
-                                     ▼                              ▼
-                              MongoDB Atlas                ChromaDB (Vector Store)
-                              (users, news,                Local ML Models
-                               chat history,                (sklearn/xgboost,
-                               portfolio, etc.)              SHAP explainer)
-                                                                     │
-                                                                     ▼
-                                                          Ollama (Llama 3) / OpenAI
-```
-
-- **Frontend**: React 18 (Vite) + Tailwind CSS
-- **Backend API**: Node.js + Express (Port 5000)
-- **AI/ML Service**: Python 3.11 + FastAPI (Port 8000)
-- **Database**: MongoDB (Port 27017) + ChromaDB (Vector Store)
-- **LLM/RAG**: Ollama / Llama 3 / SentenceTransformers
+EquityIQ is a full-stack, enterprise-grade AI assistant for equity research, fundamental valuation, financial news aggregation, sentiment analysis, and risk modeling focused on the **Indian Stock Market (NSE / BSE)**.
 
 ---
 
-## 🚀 Quickstart
+## 🏛️ Indian Stock Market Focus
 
-### Prerequisites
-- Node.js (v18+)
-- Python (v3.11+)
-- Docker & Docker Compose
+- **Primary Exchange**: National Stock Exchange of India (NSE) & BSE
+- **Supported Tickers**: RELIANCE, TCS, INFY, HDFCBANK, ICICIBANK, SBIN, LT, BHARTIARTL, ITC, AXISBANK, ASIANPAINT, MARUTI, TATAMOTORS, SUNPHARMA, WIPRO, HCLTECH, ADANIENT, ADANIPORTS, KOTAKBANK, ULTRACEMCO
+- **Currency**: Indian Rupee (₹ INR)
+- **Financial Notation**: Lakhs (L) and Crores (Cr)
 
-### Running with Docker Compose (Recommended)
+---
+
+## 🚀 Microservice System Architecture
+
+1. **Frontend Dashboard (`frontend/`)**: React + Vite + Tailwind CSS featuring live debounced ticker search, interactive Recharts price series, fundamental metrics cards in INR, sentiment signal gauge, and Indian financial news feeds.
+2. **Backend API Gateway (`backend/`)**: Node.js Express server providing stock search, quote, historical price series, financial fundamental metrics, news deduplication ingestion, and authentication.
+3. **AI Engine Service (`ai-service/`)**: Python FastAPI service hosting serialized Machine Learning models for financial headline sentiment analysis.
+4. **Database & Persistence (`mongo`)**: MongoDB container storing user profiles, indexed financial news articles, and research metadata.
+
+---
+
+## 🛠️ Quickstart with Docker Compose
+
+Ensure Docker Desktop is running, then launch all microservices:
 
 ```bash
-docker compose up --build
+docker compose up --build -d
 ```
 
-Services will be accessible at:
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:5000/api/health
-- **AI Service**: http://localhost:8000/health
-- **MongoDB**: mongodb://localhost:27017/equityiq
+### Access Services:
+- **Frontend Research Workspace**: `http://localhost:3000`
+- **Backend Express API**: `http://localhost:5000/api/health`
+- **FastAPI AI Engine**: `http://localhost:8000/health`
+- **MongoDB Database**: `mongodb://localhost:27017`
 
-### Running Services Independently
+---
 
-#### 1. Backend API (Node.js/Express)
+## 🧪 Verification & Testing
+
+Run full backend integration suite:
 ```bash
 cd backend
-cp .env.example .env
-npm install
-npm run dev
+npm test
 ```
 
-#### 2. AI Service (Python/FastAPI)
+Run Python AI service test suite:
 ```bash
 cd ai-service
-cp .env.example .env
-python -m venv venv
-# On Windows:
-venv\Scripts\activate
-# On Linux/macOS:
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+pytest
 ```
 
-#### 3. Frontend (React/Vite)
+Run live system verification against running containers:
 ```bash
-cd frontend
-cp .env.example .env
-npm install
-npm run dev
+cd backend
+node src/tests/system_verification.js
 ```
-
----
-
-## ⚙️ Environment Variables
-
-### Backend (`backend/.env.example`)
-| Variable | Description | Default |
-|---|---|---|
-| `PORT` | Node.js Express server port | `5000` |
-| `NODE_ENV` | Environment mode | `development` |
-| `MONGODB_URI` | MongoDB connection string | `mongodb://localhost:27017/equityiq` |
-| `JWT_SECRET` | Secret key for JWT signing | `super-secret-key-change-in-production` |
-| `AI_SERVICE_URL` | Internal FastAPI service URL | `http://localhost:8000` |
-
-### AI Service (`ai-service/.env.example`)
-| Variable | Description | Default |
-|---|---|---|
-| `PORT` | FastAPI server port | `8000` |
-| `ALLOWED_CORS_ORIGINS` | Allowed CORS origins | `http://localhost:5000,http://localhost:3000` |
-| `OLLAMA_BASE_URL` | Ollama LLM endpoint | `http://localhost:11434` |
-
-### Frontend (`frontend/.env.example`)
-| Variable | Description | Default |
-|---|---|---|
-| `VITE_API_BASE_URL` | Backend Express API URL | `http://localhost:5000/api` |
-
----
-
-## 🧪 Testing
-
-- **Backend**: `cd backend && npm test`
-- **AI Service**: `cd ai-service && pytest`
-- **Frontend**: `cd frontend && npm run test`
