@@ -108,20 +108,34 @@ Successfully migrated the entire EquityIQ platform to the **Indian Stock Market 
 
 ### Files Created / Modified
 - `ai-service/app/schemas/report.py`: Pydantic request & response schemas (`ReportAnalysisRequest`, `ReportAnalysisResponse`, `ExtractedMetrics`).
-- `ai-service/app/services/report_service.py`: Document NLP parser & regex metric extraction engine (PAT / Net Profit, Operating Margin, Revenue Growth, Debt/Equity).
+- `ai-service/app/services/report_service.py`: Document NLP parser & regex metric extraction engine.
 - `ai-service/app/routers/report.py`: FastAPI router mounting `POST /predict/summarize-report`.
 - `ai-service/app/tests/test_report.py`: Pytest unit test suite verifying report extraction.
-- `backend/src/models/Report.js`: Mongoose schema storing extracted filing text, executive summary, financial figures, growth catalysts, and risk factors with compound index on `(companySymbol, createdAt)`.
+- `backend/src/models/Report.js`: Mongoose schema storing extracted filing text, executive summary, financial figures, growth catalysts, and risk factors.
 - `backend/src/controllers/reportController.js`: Express controller for `POST /api/reports/upload` and `GET /api/reports/:symbol`.
 - `backend/src/routes/reportRoutes.js`: Express router with `multer` file upload configuration.
 - `backend/src/tests/reports.test.js`: Jest integration test suite for report processing endpoints.
-- `frontend/src/components/ReportProcessingWidget.jsx`: Corporate Document Upload & Extraction Workspace widget featuring file picker, sample filing loader, Executive Summary card, extracted metrics grid, growth catalysts, and risk factor tags.
-- `frontend/src/App.jsx`: Mounted `ReportProcessingWidget` in research workspace layout.
+- `frontend/src/components/ReportProcessingWidget.jsx`: Corporate Document Upload & Extraction Workspace widget.
+
+---
+
+## [2026-08-04] — Phase 8: RAG (Retrieval-Augmented Generation) & Knowledge Indexing Pipeline
+
+### Files Created / Modified
+- `ai-service/app/schemas/rag.py`: Pydantic schemas (`RAGQueryRequest`, `RAGQueryResponse`, `RetrievedContextChunk`, `KnowledgeChunk`).
+- `ai-service/app/services/rag_service.py`: Vector embedding representation & cosine similarity context retriever with automated citation synthesis.
+- `ai-service/app/routers/rag.py`: FastAPI router mounting `POST /predict/rag-query`.
+- `ai-service/app/tests/test_rag.py`: Pytest unit test suite verifying semantic context search.
+- `backend/src/controllers/ragController.js`: Express controller gathering MongoDB context (News, Reports, Stock Quote/Financials) and querying FastAPI AI RAG engine.
+- `backend/src/routes/ragRoutes.js`: Express router mounting `POST /api/ml/rag-query`.
+- `backend/src/tests/rag.test.js`: Jest integration test suite for RAG retrieval endpoints.
+- `frontend/src/components/RAGContextWidget.jsx`: Interactive RAG Semantic Research & Knowledge Search UI widget featuring search query input bar with preset prompts, relevance match score badges, source attribution tags, and synthesized RAG context answer card.
+- `frontend/src/App.jsx`: Mounted `RAGContextWidget` in main research workspace.
 
 ### Verification Commands Run
-- `pytest` (ai-service) — PASSED (6/6 unit tests green).
-- `npm test` (backend) — PASSED (29/29 integration tests green across 7 suites).
-- `node src/tests/system_verification.js` — PASSED (All 9 live integration tests green).
+- `pytest` (ai-service) — PASSED (7/7 unit tests green).
+- `npm test` (backend) — PASSED (31/31 integration tests green across 8 suites).
+- `node src/tests/system_verification.js` — PASSED (All 10 live integration tests green).
 - `npm run lint` — PASSED (0 errors, 0 warnings across backend and frontend).
-- `npm run build` — PASSED (Frontend production build generated in 24.31s).
+- `npm run build` — PASSED (Frontend production build generated in 18.89s).
 - Docker containers — ALL HEALTHY.
