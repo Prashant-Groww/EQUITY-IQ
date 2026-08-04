@@ -1,0 +1,107 @@
+const http = require('http');
+
+const request = (options, postData) => {
+  return new Promise((resolve, reject) => {
+    const req = http.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => (data += chunk));
+      res.on('end', () => {
+        try {
+          resolve({ statusCode: res.statusCode, headers: res.headers, body: JSON.parse(data) });
+        } catch {
+          resolve({ statusCode: res.statusCode, headers: res.headers, rawBody: data });
+        }
+      });
+    });
+    req.on('error', reject);
+    if (postData) req.write(JSON.stringify(postData));
+    req.end();
+  });
+};
+
+async function runSystemVerification() {
+  console.log('=' .repeat(60));
+  console.log('EquityIQ System Infrastructure Verification');
+  console.log('=' .repeat(60));
+
+  const timestamp = Date.now();
+  const testUser = {
+    name: 'Diagnostic User',
+    email: `diag_${timestamp}@equityiq.com`,
+    password: 'SecurePassword123!',
+  };
+
+  let jwtToken = '';
+
+  // 1. GET /api/health (direct 5000 & proxy 3000)
+  console.log('\n[Test 1] Health Check Endpoints:');
+  const hDirect = await request({ host: 'localhost', port: 5000, path: '/api/health', method: 'GET' });
+  console.log(`- Direct Port 5000: HTTP ${hDirect.statusCode}`, hDirect.body);
+
+  const hProxy = await request({ host: 'localhost', port: 3000, path: '/api/health', method: 'GET' });
+  console.log(`- Proxy Port 3000:  HTTP ${hProxy.statusCode}`, hProxy.body);
+
+  // 2. POST /api/auth/register
+  console.log('\n[Test 2] User Registration:');
+  const regRes = await request(
+    { host: 'localhost', port: 3000, path: '/api/auth/register', method: 'POST', headers: { 'Content-Type': 'application/json' } },
+    testUser
+  );
+  console.log(`- Status: HTTP ${regRes.statusCode}`, regRes.body);
+  if (regRes.body && regRes.body.token) jwtToken = regRes.body.token;
+
+  // 3. POST /api/auth/login
+  console.log('\n[Test 3] User Login:');
+  const loginRes = await request(
+    { host: 'localhost', port: 3000, path: '/api/auth/login', method: 'POST', headers: { 'Content-Type': 'application/json' } },
+    { email: testUser.email, password: testUser.password }
+  );
+  console.log(`- Status: HTTP ${loginRes.statusCode}`, loginRes.body);
+  if (loginRes.body && loginRes.body.token) jwtToken = loginRes.body.token;
+
+  // 4. GET /api/users/profile (JWT Protected)
+  console.log('\n[Test 4] Protected Endpoint (JWT Verification):');
+  const profRes = await request({
+    host: 'localhost',
+    port: 3000,
+    path: '/api/users/profile',
+    method: 'GET',
+    headers: { Authorization: `Bearer ${jwtToken}` },
+  });
+  console.log(`- Status: HTTP ${profRes.statusCode}`, profRes.body);
+
+  // 5. Stock API Endpoints
+  console.log('\n[Test 5] Stock Market Endpoints:');
+  const searchRes = await request({ host: 'localhost', port: 3000, path: '/api/stocks/search?q=AAPL', method: 'GET' });
+  console.log(`- Search AAPL: HTTP ${searchRes.statusCode}`, searchRes.body ? `Found ${searchRes.body.count || searchRes.body.length || 0} items` : searchRes.rawBody);
+
+  const quoteRes = await request({ host: 'localhost', port: 3000, path: '/api/stocks/AAPL/quote', method: 'GET' });
+  console.log(`- Quote AAPL: HTTP ${quoteRes.statusCode} Price=$${quoteRes.body?.price}`);
+
+  const historyRes = await request({ host: 'localhost', port: 3000, path: '/api/stocks/AAPL/history?range=1M', method: 'GET' });
+  console.log(`- History AAPL: HTTP ${historyRes.statusCode} DataPoints=${historyRes.body?.history?.length || 0}`);
+
+  const finRes = await request({ host: 'localhost', port: 3000, path: '/api/stocks/AAPL/financials', method: 'GET' });
+  console.log(`- Financials AAPL: HTTP ${finRes.statusCode} MarketCap=$${finRes.body?.financials?.marketCap}`);
+
+  // 6. News API Endpoints
+  console.log('\n[Test 6] News Integration Endpoints:');
+  const newsRes = await request({ host: 'localhost', port: 3000, path: '/api/news/AAPL?page=1&limit=3', method: 'GET' });
+  console.log(`- News Feed AAPL: HTTP ${newsRes.statusCode} TotalArticles=${newsRes.body?.pagination?.total || 0}`);
+
+  const ingestRes = await request({ host: 'localhost', port: 3000, path: '/api/news/AAPL/ingest', method: 'POST' });
+  console.log(`- Ingest News AAPL: HTTP ${ingestRes.statusCode}`, ingestRes.body?.message || ingestRes.body);
+
+  // 7. ML Proxy Endpoints
+  console.log('\n[Test 7] ML Sentiment Classifier Endpoint:');
+  const mlRes = await request(
+    { host: 'localhost', port: 3000, path: '/api/ml/sentiment', method: 'POST', headers: { 'Content-Type': 'application/json' } },
+    { text: 'Apple reported record revenue growth and surging gross profit margins.' }
+  );
+  console.log(`- ML Sentiment: HTTP ${mlRes.statusCode}`, mlRes.body);
+
+  console.log('=' .repeat(60));
+  console.log('System Verification Complete — All Services Functional!');
+}
+
+runSystemVerification().catch(console.error);

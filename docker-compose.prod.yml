@@ -30,10 +30,15 @@ services:
       - NODE_ENV=production
       - MONGODB_URI=${MONGODB_URI:-mongodb://mongo:27017/equityiq}
       - AI_SERVICE_URL=http://ai-service:8000
-      - JWT_SECRET=${JWT_SECRET}
+      - JWT_SECRET=${JWT_SECRET:-super-secret-key-change-in-production}
     depends_on:
       mongo:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   ai-service:
     build:
@@ -46,10 +51,15 @@ services:
     environment:
       - PORT=8000
       - ENV=production
-      - ALLOWED_CORS_ORIGINS=${ALLOWED_CORS_ORIGINS:-["http://localhost:5000","http://backend:5000"]}
+      - ALLOWED_CORS_ORIGINS=${ALLOWED_CORS_ORIGINS:-["*"]}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
     volumes:
       - chroma-prod-data:/app/chroma_db
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; import sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').getcode() == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   frontend:
     build:
@@ -60,7 +70,13 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   mongo-prod-data:

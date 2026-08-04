@@ -34,6 +34,11 @@ services:
         condition: service_healthy
       ai-service:
         condition: service_started
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   ai-service:
     build:
@@ -45,10 +50,15 @@ services:
     environment:
       - PORT=8000
       - ENV=development
-      - ALLOWED_CORS_ORIGINS=["http://localhost:5000","http://backend:5000","http://localhost:3000"]
+      - ALLOWED_CORS_ORIGINS=["http://localhost:5000","http://backend:5000","http://localhost:3000","*"]
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
     volumes:
       - chroma-data:/app/chroma_db
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; import sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').getcode() == 200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   frontend:
     build:
@@ -58,7 +68,13 @@ services:
     ports:
       - "3000:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   mongo-data:
