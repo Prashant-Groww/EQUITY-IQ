@@ -100,14 +100,28 @@ Successfully migrated the entire EquityIQ platform to the **Indian Stock Market 
 - `ai-service/app/tests/test_risk.py`: Pytest unit test for ML risk prediction.
 - `backend/src/controllers/riskController.js` & `backend/src/routes/riskRoutes.js`: Express controller & router for `GET /api/stocks/:symbol/risk` and `POST /api/ml/risk`.
 - `backend/src/tests/risk.test.js`: Jest integration suite covering risk endpoints.
-- `frontend/src/components/RiskAnalyticsWidget.jsx`: Quantitative Risk Dashboard widget displaying Volatility Risk Score, Volatility Tier Badge, VaR 95/99%, Max Drawdown, Beta, Sharpe Ratio, RSI (14), and MACD Histogram.
-- `frontend/src/App.jsx`: Mounted `RiskAnalyticsWidget` in main research dashboard.
+- `frontend/src/components/RiskAnalyticsWidget.jsx`: Quantitative Risk Dashboard widget.
+
+---
+
+## [2026-08-04] — Phase 7: Report Processing & Document Extraction Pipeline
+
+### Files Created / Modified
+- `ai-service/app/schemas/report.py`: Pydantic request & response schemas (`ReportAnalysisRequest`, `ReportAnalysisResponse`, `ExtractedMetrics`).
+- `ai-service/app/services/report_service.py`: Document NLP parser & regex metric extraction engine (PAT / Net Profit, Operating Margin, Revenue Growth, Debt/Equity).
+- `ai-service/app/routers/report.py`: FastAPI router mounting `POST /predict/summarize-report`.
+- `ai-service/app/tests/test_report.py`: Pytest unit test suite verifying report extraction.
+- `backend/src/models/Report.js`: Mongoose schema storing extracted filing text, executive summary, financial figures, growth catalysts, and risk factors with compound index on `(companySymbol, createdAt)`.
+- `backend/src/controllers/reportController.js`: Express controller for `POST /api/reports/upload` and `GET /api/reports/:symbol`.
+- `backend/src/routes/reportRoutes.js`: Express router with `multer` file upload configuration.
+- `backend/src/tests/reports.test.js`: Jest integration test suite for report processing endpoints.
+- `frontend/src/components/ReportProcessingWidget.jsx`: Corporate Document Upload & Extraction Workspace widget featuring file picker, sample filing loader, Executive Summary card, extracted metrics grid, growth catalysts, and risk factor tags.
+- `frontend/src/App.jsx`: Mounted `ReportProcessingWidget` in research workspace layout.
 
 ### Verification Commands Run
-- `python ml/training/train_risk.py` — PASSED (R2 = 0.9863).
-- `pytest` (ai-service) — PASSED (5/5 unit tests green).
-- `npm test` (backend) — PASSED (26/26 integration tests green across 6 suites).
-- `node src/tests/system_verification.js` — PASSED (All 8 live integration tests green).
+- `pytest` (ai-service) — PASSED (6/6 unit tests green).
+- `npm test` (backend) — PASSED (29/29 integration tests green across 7 suites).
+- `node src/tests/system_verification.js` — PASSED (All 9 live integration tests green).
 - `npm run lint` — PASSED (0 errors, 0 warnings across backend and frontend).
-- `npm run build` — PASSED (Frontend production build generated in 24.77s).
+- `npm run build` — PASSED (Frontend production build generated in 24.31s).
 - Docker containers — ALL HEALTHY.
