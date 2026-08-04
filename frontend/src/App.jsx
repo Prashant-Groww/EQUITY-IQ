@@ -4,6 +4,7 @@ import StockSearch from './components/StockSearch';
 import StockChart from './components/StockChart';
 import FinancialMetrics from './components/FinancialMetrics';
 import NewsFeed from './components/NewsFeed';
+import SentimentWidget from './components/SentimentWidget';
 
 export default function App() {
   const [backendStatus, setBackendStatus] = useState({ loading: true, online: false, data: null });
@@ -78,10 +79,11 @@ export default function App() {
 
       {/* Main Research Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 flex flex-col gap-8">
-        {/* Stock Data & News Feed Section */}
+        {/* Stock Data & ML Sentiment Section */}
         <section className="flex flex-col gap-8">
           <StockChart symbol={activeSymbol} />
           <FinancialMetrics symbol={activeSymbol} />
+          <SentimentWidget />
           <NewsFeed symbol={activeSymbol} />
         </section>
 
@@ -121,7 +123,7 @@ export default function App() {
                 <Cpu className="h-5 w-5 text-indigo-400" />
                 <div>
                   <div className="text-xs font-bold text-white">AI Engine Service</div>
-                  <div className="text-[11px] text-slate-400 font-mono">Python FastAPI (:8000)</div>
+                  <div className="text-[11px] text-slate-400 font-mono">FastAPI ML Sentiment (:8000)</div>
                 </div>
               </div>
               {aiStatus.loading ? (
@@ -145,7 +147,7 @@ export default function App() {
                 <Database className="h-5 w-5 text-emerald-400" />
                 <div>
                   <div className="text-xs font-bold text-white">Database & Vector Store</div>
-                  <div className="text-[11px] text-slate-400 font-mono">MongoDB + News Store</div>
+                  <div className="text-[11px] text-slate-400 font-mono">MongoDB + Models Store</div>
                 </div>
               </div>
               <span className="text-[11px] text-emerald-400 flex items-center gap-1 font-bold">
@@ -158,7 +160,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
-        EquityIQ AI Assistant — Phase 4 News Research Workspace
+        EquityIQ AI Assistant — Phase 5 ML Sentiment Classifier Workspace
       </footer>
     </div>
   );

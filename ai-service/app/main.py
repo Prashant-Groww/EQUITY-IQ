@@ -1,12 +1,12 @@
 import sys
 from datetime import datetime, timezone
-
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
 
 from app.core.config import settings
+from app.routers import ml
 
 # Configure Loguru structured logger
 logger.remove()
@@ -30,6 +30,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include ML router
+app.include_router(ml.router)
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):

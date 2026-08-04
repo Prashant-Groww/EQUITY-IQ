@@ -76,9 +76,32 @@
 - `npm run lint` (frontend) — PASSED (0 errors, 0 warnings).
 - `npm run build` (frontend) — PASSED (production bundle built cleanly).
 
+---
+
+## [2026-08-04] — Phase 5: ML Research — Financial News Sentiment Classifier
+
+### Files Created / Modified
+- `ml/datasets/financial_phrasebank.csv`: Financial headline sentiment corpus (Financial PhraseBank open license: positive, negative, neutral).
+- `ml/training/train_sentiment.py`: Training pipeline using TF-IDF feature extraction (`ngram_range=(1,2)`, `max_features=5000`), 5-fold cross-validation with seed `42`, evaluating Logistic Regression, Naive Bayes, Linear SVM, and Random Forest.
+- `ml/reports/`: Evaluation reports (`model_comparison.json`) and dataset license documentation (`README.md`).
+- `ai-service/models/`: Serialized model artifacts (`sentiment_model.joblib` [LinearSVM] and `tfidf_vectorizer.joblib`).
+- `ai-service/app/services/sentiment_service.py`: Inference service loading serialized joblib artifacts for high-speed sentiment prediction with rule-based fallback.
+- `ai-service/app/schemas/sentiment.py`: Pydantic input/output schemas for `/predict/sentiment`.
+- `ai-service/app/routers/ml.py`: FastAPI ML router introducing `POST /predict/sentiment`.
+- `backend/src/controllers/mlController.js` & `backend/src/routes/mlRoutes.js`: Node.js Express passthrough router mounting `POST /api/ml/sentiment`.
+- `frontend/src/components/SentimentWidget.jsx`: Sentiment analyzer UI widget with sentence input, sentiment badges, confidence meter bar, and probability distributions.
+
+### Verification Commands Run
+- `python ml/training/train_sentiment.py` — PASSED (LinearSVM selected as top model with Macro F1 = 0.5917).
+- `pytest` (ai-service) — PASSED (4/4 tests green in 10.81s).
+- `npm test` (backend) — PASSED (24/24 tests green across 5 test suites).
+- `npm run lint` (backend) — PASSED (0 errors, 0 warnings).
+- `npm run lint` (frontend) — PASSED (0 errors, 0 warnings).
+- `npm run build` (frontend) — PASSED (production bundle built cleanly in 12.96s).
+
 ### Known Issues
 - None.
 
 ### Next-Phase Readiness
-- Phase 4 checklist is 100% complete and verified.
-- Ready for **Phase 5: ML Research — Financial News Sentiment Classifier**.
+- Phase 5 checklist is 100% complete and verified.
+- Ready for **Phase 6: ML Research — Stock Volatility / Risk Prediction Model**.
