@@ -4,7 +4,7 @@ const stockService = require('../services/stockService');
 
 jest.setTimeout(15000);
 
-describe('Phase 3 — Stock Data API Integration Tests (Indian Equities)', () => {
+describe('Phase 3 — Stock Data API Integration Tests (Indian Equities Real-Time)', () => {
   describe('GET /api/stocks/search', () => {
     it('should return ticker search matches for query RELIANCE', async () => {
       const res = await request(app).get('/api/stocks/search?q=RELIANCE');
@@ -23,13 +23,24 @@ describe('Phase 3 — Stock Data API Integration Tests (Indian Equities)', () =>
   });
 
   describe('GET /api/stocks/:symbol/quote', () => {
-    it('should return real-time NSE stock quote for RELIANCE in INR', async () => {
+    it('should return complete real-time NSE stock quote for RELIANCE with all required metrics', async () => {
       const res = await request(app).get('/api/stocks/RELIANCE/quote');
       expect(res.statusCode).toBe(200);
       expect(res.body).toHaveProperty('symbol', 'RELIANCE');
-      expect(res.body).toHaveProperty('price');
+      expect(res.body).toHaveProperty('companyName');
+      expect(res.body).toHaveProperty('exchange');
       expect(res.body).toHaveProperty('currency', 'INR');
-      expect(res.body).toHaveProperty('exchange', 'NSE');
+      expect(res.body).toHaveProperty('price');
+      expect(res.body).toHaveProperty('previousClose');
+      expect(res.body).toHaveProperty('open');
+      expect(res.body).toHaveProperty('dayHigh');
+      expect(res.body).toHaveProperty('dayLow');
+      expect(res.body).toHaveProperty('fiftyTwoWeekHigh');
+      expect(res.body).toHaveProperty('fiftyTwoWeekLow');
+      expect(res.body).toHaveProperty('volume');
+      expect(res.body).toHaveProperty('marketCap');
+      expect(res.body).toHaveProperty('peRatio');
+      expect(res.body).toHaveProperty('dividendYield');
     });
   });
 
@@ -59,10 +70,7 @@ describe('Phase 3 — Stock Data API Integration Tests (Indian Equities)', () =>
 
   describe('TTL Caching Verification', () => {
     it('should hit cache on subsequent quote request', async () => {
-      // First call populates cache
       await stockService.getStockQuote('HDFCBANK');
-
-      // Second call must return cached object
       const cachedQuote = await stockService.getStockQuote('HDFCBANK');
       expect(cachedQuote).toHaveProperty('symbol', 'HDFCBANK');
     });

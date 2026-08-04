@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
-import { formatINR } from '../utils/formatters';
+import { formatINR, formatIndianNumber } from '../utils/formatters';
 
 const TIME_RANGES = ['1D', '1W', '1M', '1Y', '5Y'];
 
@@ -53,23 +53,24 @@ export default function StockChart({ symbol }) {
   return (
     <div className="glass-card rounded-2xl p-6 flex flex-col gap-6">
       {/* Stock Quote Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-800 pb-5">
         <div>
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-black tracking-tight text-white">{quote?.symbol || symbol}</h2>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono font-bold">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono font-bold">
               {quote?.exchange || 'NSE'} (INR)
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">{quote?.companyName || `${symbol} India Ltd`}</p>
+          <p className="text-xs text-slate-400 mt-1">{quote?.companyName || `${symbol} India Limited`}</p>
         </div>
 
+        {/* Live Price Header */}
         <div className="flex items-baseline gap-3">
           <div className="text-3xl font-extrabold tracking-tight text-white">
             {formatINR(quote?.price || 0)}
           </div>
           <div
-            className={`flex items-center gap-1 text-sm font-bold px-2.5 py-1 rounded-lg ${
+            className={`flex items-center gap-1 text-sm font-bold px-3 py-1 rounded-lg ${
               isPositive
                 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                 : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
@@ -85,11 +86,51 @@ export default function StockChart({ symbol }) {
         </div>
       </div>
 
+      {/* Quote Summary Metrics Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 bg-[#0F172A]/90 border border-slate-800 rounded-xl p-3.5 text-xs">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-slate-500 text-[11px]">Open</span>
+          <span className="font-bold text-white font-mono">{formatINR(quote?.open || quote?.price || 0)}</span>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-slate-500 text-[11px]">Prev Close</span>
+          <span className="font-bold text-slate-300 font-mono">{formatINR(quote?.previousClose || 0)}</span>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-slate-500 text-[11px]">Day High / Low</span>
+          <span className="font-bold text-emerald-400 font-mono">
+            {formatINR(quote?.dayHigh || 0)} / <span className="text-rose-400">{formatINR(quote?.dayLow || 0)}</span>
+          </span>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-slate-500 text-[11px]">52W High / Low</span>
+          <span className="font-bold text-amber-400 font-mono">
+            {formatINR(quote?.fiftyTwoWeekHigh || 0)} / {formatINR(quote?.fiftyTwoWeekLow || 0)}
+          </span>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-slate-500 text-[11px]">Volume</span>
+          <span className="font-bold text-blue-400 font-mono">
+            {(quote?.volume || 0).toLocaleString('en-IN')}
+          </span>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-slate-500 text-[11px]">Market Cap</span>
+          <span className="font-bold text-indigo-400 font-mono">{formatIndianNumber(quote?.marketCap)}</span>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-slate-500 text-[11px]">P/E Ratio</span>
+          <span className="font-bold text-purple-400 font-mono">
+            {quote?.peRatio ? quote.peRatio.toFixed(2) : 'N/A'}
+          </span>
+        </div>
+      </div>
+
       {/* Range Selectors */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-xs text-slate-400">
           <Activity className="h-4 w-4 text-blue-400" />
-          <span>NSE Price History ({activeRange})</span>
+          <span>Real-Time NSE Price History ({activeRange})</span>
         </div>
 
         <div className="flex items-center bg-slate-900/80 border border-slate-800 rounded-xl p-1 gap-1">
@@ -113,7 +154,7 @@ export default function StockChart({ symbol }) {
       <div className="h-72 w-full pt-2">
         {loading ? (
           <div className="h-full flex items-center justify-center text-xs text-slate-500 animate-pulse">
-            Loading NSE stock price series...
+            Loading real-time NSE stock price series...
           </div>
         ) : history.length === 0 ? (
           <div className="h-full flex items-center justify-center text-xs text-slate-500">
