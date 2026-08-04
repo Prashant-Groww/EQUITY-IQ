@@ -51,12 +51,6 @@
 - `frontend/src/components/FinancialMetrics.jsx`: Financial metrics cards grid for Market Cap, P/E Ratio, EPS, Revenue, 52W High/Low, and Dividend Yield.
 - `frontend/src/App.jsx`: Updated main research dashboard layout.
 
-### Verification Commands Run
-- `npm test` (backend) — PASSED (18/18 integration tests green across stocks, auth, and health suites).
-- `npm run lint` (backend) — PASSED (0 errors, 0 warnings).
-- `npm run lint` (frontend) — PASSED (0 errors, 0 warnings).
-- `npm run build` (frontend) — PASSED (production bundle built cleanly).
-
 ---
 
 ## [2026-08-03] — Phase 4: News
@@ -70,12 +64,6 @@
 - `frontend/src/components/NewsFeed.jsx`: Financial news feed widget displaying source pills, published dates, summaries, external article links, on-demand refresh button, and page navigation controls.
 - `frontend/src/App.jsx`: Integrated NewsFeed into research workspace.
 
-### Verification Commands Run
-- `npm test` (backend) — PASSED (22/22 integration tests green across news, stocks, auth, and health suites).
-- `npm run lint` (backend) — PASSED (0 errors, 0 warnings).
-- `npm run lint` (frontend) — PASSED (0 errors, 0 warnings).
-- `npm run build` (frontend) — PASSED (production bundle built cleanly).
-
 ---
 
 ## [2026-08-04] — Phase 5: ML Research — Financial News Sentiment Classifier
@@ -84,34 +72,40 @@
 - `ml/datasets/financial_phrasebank.csv`: Financial headline sentiment corpus (Financial PhraseBank open license: positive, negative, neutral).
 - `ml/training/train_sentiment.py`: Training pipeline using TF-IDF feature extraction (`ngram_range=(1,2)`, `max_features=5000`), 5-fold cross-validation with seed `42`, evaluating Logistic Regression, Naive Bayes, Linear SVM, and Random Forest.
 - `ml/reports/`: Evaluation reports (`model_comparison.json`) and dataset license documentation (`README.md`).
-- `ai-service/models/`: Serialized model artifacts (`sentiment_model.joblib` [LinearSVM] and `tfidf_vectorizer.joblib`).
-- `ai-service/app/services/sentiment_service.py`: Inference service loading serialized joblib artifacts for high-speed sentiment prediction with rule-based fallback.
+- `ai-service/models/`: Serialized model artifacts (`sentiment_model.joblib` and `tfidf_vectorizer.joblib`).
+- `ai-service/app/services/sentiment_service.py`: Inference service loading serialized joblib artifacts for high-speed sentiment prediction.
 - `ai-service/app/schemas/sentiment.py`: Pydantic input/output schemas for `/predict/sentiment`.
 - `ai-service/app/routers/ml.py`: FastAPI ML router introducing `POST /predict/sentiment`.
 - `backend/src/controllers/mlController.js` & `backend/src/routes/mlRoutes.js`: Node.js Express passthrough router mounting `POST /api/ml/sentiment`.
 - `frontend/src/components/SentimentWidget.jsx`: Sentiment analyzer UI widget with sentence input, sentiment badges, confidence meter bar, and probability distributions.
 
-### Verification Commands Run
-- `python ml/training/train_sentiment.py` — PASSED (LinearSVM selected as top model with Macro F1 = 0.5917).
-- `pytest` (ai-service) — PASSED (4/4 tests green in 10.81s).
-- `npm test` (backend) — PASSED (24/24 tests green across 5 test suites).
-- `npm run lint` (backend) — PASSED (0 errors, 0 warnings).
-- `npm run lint` (frontend) — PASSED (0 errors, 0 warnings).
-- `npm run build` (frontend) — PASSED (production bundle built cleanly in 12.96s).
-
 ---
 
-## [2026-08-04] — Diagnostic & Infrastructure Fix: Frontend-Backend Connectivity
+## [2026-08-04] — System Migration: Indian Stock Market (NSE / BSE)
 
-### Root Cause Analysis
-The Backend API container was running and listening on port 5000, but the frontend dashboard indicated **OFFLINE**. In Docker deployment mode, the frontend container serves static production files via Nginx on port 80 (mapped to host 3000). The `frontend/Dockerfile` Nginx configuration lacked a `location /api/` proxy block. Consequently, when `App.jsx` fetched `/api/health` from `http://localhost:3000/api/health`, Nginx returned `index.html` (text/html). When `res.json()` attempted to parse HTML, it threw a `SyntaxError`, caught by the health check fallback which set `backendStatus` to `offline`.
+### Migration Overview
+Successfully migrated the entire EquityIQ platform from US equity markets to the **Indian Stock Market (NSE / BSE)**.
 
-### Resolution & Fixes Applied
-1. **Nginx Proxy Configuration (`frontend/Dockerfile`)**: Added `location /api/ { proxy_pass http://backend:5000/api/; ... }` to transparently route all API traffic from port 3000 to the Express backend container on port 5000.
-2. **Container Health Checks (`docker-compose.yml` & `docker-compose.prod.yml`)**: Added native health checks for `backend`, `ai-service`, and `frontend` microservices.
-3. **App Health Parsing (`frontend/src/App.jsx`)**: Updated health check handler to validate `data.status === 'ok'` JSON payload.
-4. **Comprehensive System Verification (`backend/src/tests/system_verification.js`)**: Executed 7 live end-to-end integration tests confirming 100% pass rate.
+### Changes Implemented
+1. **Stock Market Service (`backend/src/services/stockService.js`)**:
+   - Replaced US tickers with top Indian NSE/BSE equities (`RELIANCE`, `TCS`, `INFY`, `HDFCBANK`, `ICICIBANK`, `SBIN`, `LT`, `BHARTIARTL`, `ITC`, `AXISBANK`, `ASIANPAINT`, `MARUTI`, `TATAMOTORS`, `SUNPHARMA`, `WIPRO`, `HCLTECH`, `ADANIENT`, `ADANIPORTS`, `KOTAKBANK`, `ULTRACEMCO`).
+   - Appended `.NS` suffix for Yahoo Finance API calls and normalized ticker symbols back to clean NSE symbols.
+2. **Indian Financial News Engine (`backend/src/services/newsService.js`)**:
+   - Updated headline generator to output Indian financial sources (Economic Times, Moneycontrol, Livemint, Business Standard, CNBC TV18).
+3. **Frontend Indian Formatting (`frontend/src/utils/formatters.js` & components)**:
+   - Created `formatINR` and `formatIndianNumber` helpers for INR (`₹`) prices and Crores (`₹ Cr`) / Lakhs (`₹ L`) financial notation.
+   - Updated `StockSearch.jsx`, `StockChart.jsx`, `FinancialMetrics.jsx`, `SentimentWidget.jsx`, and `App.jsx` (default ticker `RELIANCE`).
+4. **ML Model Retraining (`ml/training/train_sentiment.py`)**:
+   - Updated `ml/datasets/financial_phrasebank.csv` with Indian corporate news headlines (Reliance, TCS, Infosys, SBI, Tata Motors, HDFC Bank, Adani).
+   - Re-trained model pipeline and serialized joblib artifacts.
+5. **Test Suites & Documentation (`backend/src/tests/`)**:
+   - Updated `stocks.test.js`, `news.test.js`, `system_verification.js`, and `README.md`.
 
 ### Verification Results
-- `docker compose up --build` — PASSED (all containers `equityiq-backend`, `equityiq-mongo`, `equityiq-ai-service`, `equityiq-frontend` healthy).
-- Live verification suite (`node src/tests/system_verification.js`) — ALL 7 API TEST SUITES PASSED.
+- `python ml/training/train_sentiment.py` — PASSED (Model trained & serialized cleanly).
+- `pytest` (ai-service) — PASSED (4/4 tests green).
+- `npm test` (backend) — PASSED (25/25 tests green across 5 test suites).
+- `node src/tests/system_verification.js` — PASSED (All 7 live system integration tests green).
+- `npm run lint` — PASSED across backend and frontend (0 errors, 0 warnings).
+- `npm run build` — PASSED (Frontend Vite production bundle built in 14.37s).
+- Docker containers (`equityiq-backend`, `equityiq-mongo`, `equityiq-ai-service`, `equityiq-frontend`) — ALL HEALTHY.
