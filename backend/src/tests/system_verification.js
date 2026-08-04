@@ -105,6 +105,18 @@ async function runSystemVerification() {
   const riskRes = await request({ host: 'localhost', port: 3000, path: '/api/stocks/RELIANCE/risk', method: 'GET' });
   console.log(`- ML Risk RELIANCE: HTTP ${riskRes.statusCode} Score=${riskRes.body?.risk_score} Tier=${riskRes.body?.risk_tier} Vol20D=${riskRes.body?.metrics?.volatility_20d}`);
 
+  // 9. Report Processing & Document Extraction Endpoint
+  console.log('\n[Test 9] Report Processing & Document Extraction Endpoint:');
+  const reportRes = await request(
+    { host: 'localhost', port: 3000, path: '/api/reports/upload', method: 'POST', headers: { 'Content-Type': 'application/json' } },
+    {
+      symbol: 'RELIANCE',
+      title: 'Reliance Industries Q4 Filing',
+      textContent: 'Reliance Industries net profit rose by 18% to Rs 18,951 crore. Revenue grew to Rs 100,000 crore. Operating margin stood at 18.2%. Debt to equity was 0.38.',
+    }
+  );
+  console.log(`- Report Processing RELIANCE: HTTP ${reportRes.statusCode}`, reportRes.body?.message || reportRes.body);
+
   console.log('=' .repeat(60));
   console.log('Indian Stock Market Verification Complete — All Services Functional!');
 }
