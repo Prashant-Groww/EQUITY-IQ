@@ -11,6 +11,7 @@ const mlRoutes = require('./routes/mlRoutes');
 const riskRoutes = require('./routes/riskRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const ragRoutes = require('./routes/ragRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use('/api/stocks', stockRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/ml', mlRoutes);
 app.use('/api/ml', ragRoutes);
+app.use('/api/ml', chatRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api', riskRoutes);
 

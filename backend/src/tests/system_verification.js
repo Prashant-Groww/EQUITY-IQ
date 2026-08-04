@@ -128,6 +128,17 @@ async function runSystemVerification() {
   );
   console.log(`- RAG Query RELIANCE: HTTP ${ragRes.statusCode} ChunksFound=${ragRes.body?.retrieved_chunks?.length || 0} TopMatch=${ragRes.body?.retrieved_chunks?.[0]?.source_type}`);
 
+  // 11. AI Chat Copilot Endpoint
+  console.log('\n[Test 11] AI Chat Assistant & Copilot Endpoint:');
+  const chatRes = await request(
+    { host: 'localhost', port: 3000, path: '/api/ml/chat', method: 'POST', headers: { 'Content-Type': 'application/json' } },
+    {
+      symbol: 'RELIANCE',
+      message: 'Should I buy RELIANCE stock at current levels?',
+    }
+  );
+  console.log(`- AI Chat Copilot RELIANCE: HTTP ${chatRes.statusCode} Intent=${chatRes.body?.intent_detected} ReplySnippet="${chatRes.body?.reply?.slice(0, 60)}..."`);
+
   console.log('=' .repeat(60));
   console.log('Indian Stock Market Verification Complete — All Services Functional!');
 }

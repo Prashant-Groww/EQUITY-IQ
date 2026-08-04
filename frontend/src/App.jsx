@@ -8,6 +8,7 @@ import SentimentWidget from './components/SentimentWidget';
 import RiskAnalyticsWidget from './components/RiskAnalyticsWidget';
 import ReportProcessingWidget from './components/ReportProcessingWidget';
 import RAGContextWidget from './components/RAGContextWidget';
+import AIChatCopilotWidget from './components/AIChatCopilotWidget';
 
 export default function App() {
   const [backendStatus, setBackendStatus] = useState({ loading: true, online: false, data: null });
@@ -89,11 +90,12 @@ export default function App() {
 
       {/* Main Research Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 flex flex-col gap-8">
-        {/* Stock Data, Risk Analytics, Report Processing, RAG & ML Sentiment Section */}
+        {/* Stock Data, Risk Analytics, Copilot, RAG & Report Processing Section */}
         <section className="flex flex-col gap-8">
           <StockChart symbol={activeSymbol} />
           <FinancialMetrics symbol={activeSymbol} />
           <RiskAnalyticsWidget symbol={activeSymbol} />
+          <AIChatCopilotWidget symbol={activeSymbol} />
           <RAGContextWidget symbol={activeSymbol} />
           <ReportProcessingWidget symbol={activeSymbol} />
           <SentimentWidget />
@@ -136,7 +138,7 @@ export default function App() {
                 <Cpu className="h-5 w-5 text-indigo-400" />
                 <div>
                   <div className="text-xs font-bold text-white">AI Engine Service</div>
-                  <div className="text-[11px] text-slate-400 font-mono">FastAPI RAG & ML Engine (:8000)</div>
+                  <div className="text-[11px] text-slate-400 font-mono">FastAPI Copilot Engine (:8000)</div>
                 </div>
               </div>
               {aiStatus.loading ? (
