@@ -99,9 +99,19 @@
 - `npm run lint` (frontend) — PASSED (0 errors, 0 warnings).
 - `npm run build` (frontend) — PASSED (production bundle built cleanly in 12.96s).
 
-### Known Issues
-- None.
+---
 
-### Next-Phase Readiness
-- Phase 5 checklist is 100% complete and verified.
-- Ready for **Phase 6: ML Research — Stock Volatility / Risk Prediction Model**.
+## [2026-08-04] — Diagnostic & Infrastructure Fix: Frontend-Backend Connectivity
+
+### Root Cause Analysis
+The Backend API container was running and listening on port 5000, but the frontend dashboard indicated **OFFLINE**. In Docker deployment mode, the frontend container serves static production files via Nginx on port 80 (mapped to host 3000). The `frontend/Dockerfile` Nginx configuration lacked a `location /api/` proxy block. Consequently, when `App.jsx` fetched `/api/health` from `http://localhost:3000/api/health`, Nginx returned `index.html` (text/html). When `res.json()` attempted to parse HTML, it threw a `SyntaxError`, caught by the health check fallback which set `backendStatus` to `offline`.
+
+### Resolution & Fixes Applied
+1. **Nginx Proxy Configuration (`frontend/Dockerfile`)**: Added `location /api/ { proxy_pass http://backend:5000/api/; ... }` to transparently route all API traffic from port 3000 to the Express backend container on port 5000.
+2. **Container Health Checks (`docker-compose.yml` & `docker-compose.prod.yml`)**: Added native health checks for `backend`, `ai-service`, and `frontend` microservices.
+3. **App Health Parsing (`frontend/src/App.jsx`)**: Updated health check handler to validate `data.status === 'ok'` JSON payload.
+4. **Comprehensive System Verification (`backend/src/tests/system_verification.js`)**: Executed 7 live end-to-end integration tests confirming 100% pass rate.
+
+### Verification Results
+- `docker compose up --build` — PASSED (all containers `equityiq-backend`, `equityiq-mongo`, `equityiq-ai-service`, `equityiq-frontend` healthy).
+- Live verification suite (`node src/tests/system_verification.js`) — ALL 7 API TEST SUITES PASSED.
