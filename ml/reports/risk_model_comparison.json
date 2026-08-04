@@ -1,0 +1,23 @@
+{
+  "best_model": "GradientBoosting",
+  "r2_score": 0.9863117615611721,
+  "models": {
+    "RandomForest": {
+      "r2_score": 0.9756458480686604
+    },
+    "GradientBoosting": {
+      "r2_score": 0.9863117615611721
+    }
+  },
+  "features": [
+    "vol_20d",
+    "vol_60d",
+    "var_95",
+    "var_99",
+    "max_drawdown",
+    "beta",
+    "sharpe_ratio",
+    "rsi",
+    "macd_hist"
+  ]
+}

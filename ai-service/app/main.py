@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 
 from app.core.config import settings
-from app.routers import ml
+from app.routers import ml, risk
 
 # Configure Loguru structured logger
 logger.remove()
@@ -31,8 +31,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include ML router
+# Include ML routers
 app.include_router(ml.router)
+app.include_router(risk.router)
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):

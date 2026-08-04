@@ -100,6 +100,11 @@ async function runSystemVerification() {
   );
   console.log(`- ML Sentiment: HTTP ${mlRes.statusCode}`, mlRes.body);
 
+  // 8. ML Risk & Quantitative Analytics Endpoint
+  console.log('\n[Test 8] ML Quantitative Risk & Volatility Endpoint:');
+  const riskRes = await request({ host: 'localhost', port: 3000, path: '/api/stocks/RELIANCE/risk', method: 'GET' });
+  console.log(`- ML Risk RELIANCE: HTTP ${riskRes.statusCode} Score=${riskRes.body?.risk_score} Tier=${riskRes.body?.risk_tier} Vol20D=${riskRes.body?.metrics?.volatility_20d}`);
+
   console.log('=' .repeat(60));
   console.log('Indian Stock Market Verification Complete — All Services Functional!');
 }
