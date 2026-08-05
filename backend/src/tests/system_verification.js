@@ -139,6 +139,16 @@ async function runSystemVerification() {
   );
   console.log(`- AI Chat Copilot RELIANCE: HTTP ${chatRes.statusCode} Intent=${chatRes.body?.intent_detected} ReplySnippet="${chatRes.body?.reply?.slice(0, 60)}..."`);
 
+  // 12. Portfolio Management & AI Optimization Endpoint
+  console.log('\n[Test 12] Portfolio Management & AI Optimization Endpoint:');
+  const portRes = await request({ host: 'localhost', port: 3000, path: '/api/portfolio', method: 'GET' });
+  console.log(`- Portfolio Valuation: HTTP ${portRes.statusCode} Value=₹${portRes.body?.data?.summary?.totalCurrentValue} HoldingsCount=${portRes.body?.data?.summary?.holdingsCount}`);
+
+  const optRes = await request(
+    { host: 'localhost', port: 3000, path: '/api/portfolio/optimize', method: 'POST', headers: { 'Content-Type': 'application/json' } }
+  );
+  console.log(`- AI Portfolio Optimization: HTTP ${optRes.statusCode} DiversificationScore=${optRes.body?.data?.diversification_score} Beta=${optRes.body?.data?.portfolio_beta}`);
+
   console.log('=' .repeat(60));
   console.log('Indian Stock Market Verification Complete — All Services Functional!');
 }

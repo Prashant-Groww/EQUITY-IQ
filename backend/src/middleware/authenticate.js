@@ -38,4 +38,21 @@ const authenticate = async (req, res, next) => {
   }
 };
 
+const optionalAuthenticate = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const secret = process.env.JWT_SECRET || 'super-secret-key-change-in-production';
+      const decoded = jwt.verify(token, secret);
+      const user = await User.findById(decoded.id);
+      if (user) req.user = user;
+    }
+  } catch {
+    // Ignore invalid tokens in optional mode, fall back to guest session
+  }
+  next();
+};
+
 module.exports = authenticate;
+module.exports.optionalAuthenticate = optionalAuthenticate;

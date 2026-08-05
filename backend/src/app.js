@@ -12,6 +12,7 @@ const riskRoutes = require('./routes/riskRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const ragRoutes = require('./routes/ragRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const portfolioRoutes = require('./routes/portfolioRoutes');
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use('/api/ml', mlRoutes);
 app.use('/api/ml', ragRoutes);
 app.use('/api/ml', chatRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/portfolio', portfolioRoutes);
 app.use('/api', riskRoutes);
 
 // Health Check Endpoint
