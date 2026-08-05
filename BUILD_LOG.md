@@ -153,3 +153,30 @@ Successfully migrated the entire EquityIQ platform to the **Indian Stock Market 
 - `npm run lint` — PASSED (0 errors, 0 warnings across backend and frontend).
 - `npm run build` — PASSED (Frontend production build generated in 14.21s).
 - Docker containers — ALL HEALTHY.
+
+---
+
+## [2026-08-05] — Phase 10: Portfolio Management & Watchlist Analytics Engine
+
+### Files Created / Modified
+- `ai-service/app/schemas/portfolio.py`: Pydantic schemas (`HoldingInput`, `PortfolioOptimizeRequest`, `RebalanceRecommendation`, `PortfolioOptimizeResponse`).
+- `ai-service/app/services/portfolio_analytics_service.py`: Portfolio optimization engine computing Diversification Score (0-100), weighted Beta vs Nifty 50, concentration risk detection (>30%), and rebalancing action advisor.
+- `ai-service/app/routers/portfolio.py`: FastAPI router mounting `POST /predict/portfolio-optimize`.
+- `ai-service/app/main.py`: Registered portfolio router in FastAPI app.
+- `ai-service/app/tests/test_portfolio.py`: Pytest unit test suite verifying portfolio optimization and rebalancing computations.
+- `backend/src/models/Portfolio.js`: Mongoose schema for user/guest portfolios, holdings (`symbol`, `quantity`, `avgBuyPrice`), and watchlists.
+- `backend/src/services/portfolioService.js`: Valuation service computing real-time total investment, total current value (₹ INR), total P&L, session gain/loss, asset allocation %, and forwarding optimization queries to FastAPI AI service.
+- `backend/src/controllers/portfolioController.js`: Express handlers for `/api/portfolio`, `/api/portfolio/holdings`, `/api/portfolio/watchlist`, and `/api/portfolio/optimize`.
+- `backend/src/routes/portfolioRoutes.js`: Express router mounting portfolio endpoints with `optionalAuthenticate` middleware for seamless guest and logged-in user support.
+- `backend/src/middleware/authenticate.js`: Added `optionalAuthenticate` middleware.
+- `backend/src/app.js`: Mounted `/api/portfolio` router.
+- `backend/src/tests/portfolio.test.js`: Jest integration test suite covering portfolio retrieval, holding addition/removal, watchlist toggling, and AI portfolio optimization.
+- `backend/src/tests/system_verification.js`: Added Test 12 verifying live portfolio valuation and AI optimization endpoints.
+- `frontend/src/components/PortfolioWidget.jsx`: Interactive Portfolio & Watchlist UI featuring horizontal ticker strip, valuation summary cards (₹ INR), holdings table with allocation percentages, position editor, and AI Rebalancing Advisor card.
+- `frontend/src/App.jsx`: Integrated `PortfolioWidget` into main research workspace layout.
+
+### Verification Commands Run
+- `pytest` (ai-service) — PASSED (10/10 unit tests green).
+- `npm test` (backend) — PASSED (38/38 integration tests green across 10 suites).
+- `npm run build` (frontend) — PASSED (Vite production bundle built cleanly in 23.46s).
+
