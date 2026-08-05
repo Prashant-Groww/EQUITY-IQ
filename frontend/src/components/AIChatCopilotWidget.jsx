@@ -89,21 +89,19 @@ export default function AIChatCopilotWidget({ symbol }) {
             className={`flex items-start gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
           >
             <div
-              className={`p-2 rounded-xl border flex-shrink-0 ${
-                msg.role === 'user'
-                  ? 'bg-blue-600/20 border-blue-500/30 text-blue-400'
-                  : 'bg-purple-600/20 border-purple-500/30 text-purple-400'
-              }`}
+              className={`p-2 rounded-xl border flex-shrink-0 ${msg.role === 'user'
+                ? 'bg-blue-600/20 border-blue-500/30 text-blue-400'
+                : 'bg-purple-600/20 border-purple-500/30 text-purple-400'
+                }`}
             >
               {msg.role === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
             </div>
 
             <div
-              className={`max-w-[85%] rounded-2xl px-4 py-3 text-xs leading-relaxed font-medium ${
-                msg.role === 'user'
-                  ? 'bg-blue-600/20 text-blue-100 border border-blue-500/20 rounded-tr-none'
-                  : 'bg-slate-900/90 text-slate-200 border border-slate-800 rounded-tl-none'
-              }`}
+              className={`max-w-[85%] rounded-2xl px-4 py-3 text-xs leading-relaxed font-medium ${msg.role === 'user'
+                ? 'bg-blue-600/20 text-blue-100 border border-blue-500/20 rounded-tr-none'
+                : 'bg-slate-900/90 text-slate-200 border border-slate-800 rounded-tl-none'
+                }`}
             >
               {msg.content}
             </div>
