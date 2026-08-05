@@ -221,7 +221,18 @@ Successfully migrated the entire EquityIQ platform to the **Indian Stock Market 
 - `pytest` (ai-service) — PASSED (12/12 unit tests green across all ML, RAG, Chat, Risk, Report, Portfolio & Export endpoints).
 - `npm test` (backend) — PASSED (44/44 integration tests green across all 12 microservice suites).
 - `npm run build` (frontend) — PASSED (Vite production bundle built cleanly in 29.55s).
-- Docker Compose Production Stack — ALL 4 MICROSERVICES HEALTHY & OPERATIONAL (`mongo`, `backend`, `ai-service`, `frontend`).
+- Docker Compose Stack (`docker compose up`) — ALL 4 CONTAINERS PASSED HEALTHCHECK & ARE HEALTHY (`equityiq-frontend`, `equityiq-backend`, `equityiq-ai-service`, `equityiq-mongo`).
+
+---
+
+### Docker Frontend Container Healthcheck Resolution
+- **Issue**: `equityiq-frontend` container reported `(unhealthy)` status in `docker ps` despite Nginx and static/API requests operating normally.
+- **Root Cause**: In Alpine Linux (`nginx:alpine`), `localhost` resolves to IPv6 loopback (`::1`) first. Because Nginx configuration only contained `listen 80;` (IPv4 loopback `0.0.0.0:80`), Docker's healthcheck `wget -qO- http://localhost:80/` attempted to connect to `::1:80` and failed with `wget: can't connect to remote host: Connection refused`.
+- **Fix**:
+  1. Updated `docker-compose.yml` and `docker-compose.prod.yml` healthcheck test command to target `http://127.0.0.1:80/` explicitly over IPv4.
+  2. Added `listen [::]:80;` IPv6 binding to `frontend/nginx.conf` alongside IPv4 `listen 80;`.
+- **Result**: `equityiq-frontend` status transitioned to `healthy` instantly on container initialization (`docker ps` verified).
+
 
 
 
