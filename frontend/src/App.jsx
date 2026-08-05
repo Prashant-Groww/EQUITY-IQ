@@ -10,6 +10,7 @@ import ReportProcessingWidget from './components/ReportProcessingWidget';
 import RAGContextWidget from './components/RAGContextWidget';
 import AIChatCopilotWidget from './components/AIChatCopilotWidget';
 import PortfolioWidget from './components/PortfolioWidget';
+import AlertsAndExportWidget from './components/AlertsAndExportWidget';
 
 export default function App() {
   const [backendStatus, setBackendStatus] = useState({ loading: true, online: false, data: null });
@@ -96,6 +97,7 @@ export default function App() {
           <StockChart symbol={activeSymbol} />
           <FinancialMetrics symbol={activeSymbol} />
           <PortfolioWidget activeSymbol={activeSymbol} onSelectSymbol={setActiveSymbol} />
+          <AlertsAndExportWidget activeSymbol={activeSymbol} />
           <RiskAnalyticsWidget symbol={activeSymbol} />
           <AIChatCopilotWidget symbol={activeSymbol} />
           <RAGContextWidget symbol={activeSymbol} />
