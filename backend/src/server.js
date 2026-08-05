@@ -23,6 +23,17 @@ const startServer = async () => {
       logger.error({ err }, 'Uncaught Exception');
       process.exit(1);
     });
+
+    const shutdown = (signal) => {
+      logger.info(`Received ${signal}. Shutting down HTTP server gracefully...`);
+      server.close(() => {
+        logger.info('HTTP server closed. Process terminating.');
+        process.exit(0);
+      });
+    };
+
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
   } catch (err) {
     logger.error({ err }, 'Failed to initialize server');
     process.exit(1);
