@@ -180,3 +180,30 @@ Successfully migrated the entire EquityIQ platform to the **Indian Stock Market 
 - `npm test` (backend) — PASSED (38/38 integration tests green across 10 suites).
 - `npm run build` (frontend) — PASSED (Vite production bundle built cleanly in 23.46s).
 
+---
+
+## [2026-08-05] — Phase 11: Alerting, Notification & Report Export System
+
+### Files Created / Modified
+- `ai-service/app/schemas/export.py`: Pydantic schemas (`ResearchBriefRequest`, `ResearchBriefResponse`, `ExecutiveSummarySection`).
+- `ai-service/app/services/brief_generator_service.py`: Automated Equity Research Brief synthesizer compiling valuation, ML risk, news sentiment, and RAG corporate context.
+- `ai-service/app/routers/export.py`: FastAPI router mounting `POST /predict/research-brief`.
+- `ai-service/app/main.py`: Registered `export.router` in FastAPI app.
+- `ai-service/app/tests/test_export.py`: Pytest unit test suite verifying research brief generation.
+- `backend/src/models/Alert.js`: Mongoose schema for price threshold (`PRICE_ABOVE`, `PRICE_BELOW`), volatility spike (`VOLATILITY_SPIKE`), and sentiment shift rules.
+- `backend/src/services/alertService.js`: Alert evaluation engine checking live stock quotes against active monitoring rules.
+- `backend/src/services/exportService.js`: Research brief gatherer generating multi-section reports and Markdown formatted outputs.
+- `backend/src/controllers/alertController.js` & `backend/src/controllers/exportController.js`: Express controller handlers.
+- `backend/src/routes/alertRoutes.js` & `backend/src/routes/exportRoutes.js`: Express routers mounting `/api/alerts` and `/api/export` endpoints.
+- `backend/src/app.js`: Registered `/api/alerts` and `/api/export` routes.
+- `backend/src/tests/alerts.test.js`: Jest integration test suite for alert rule evaluation and creation.
+- `backend/src/tests/export.test.js`: Jest integration test suite for research brief generation.
+- `frontend/src/components/AlertsAndExportWidget.jsx`: Interactive Alert Manager UI with live rule trigger banners, custom rule form, active alert cards, and AI Equity Research Brief exporter with Copy Markdown and Print PDF actions.
+- `frontend/src/App.jsx`: Integrated `AlertsAndExportWidget` into research workspace layout.
+
+### Verification Commands Run
+- `pytest` (ai-service) — PASSED (12/12 unit tests green).
+- `npm test` (backend) — PASSED (44/44 integration tests green across 12 suites).
+- `npm run build` (frontend) — PASSED (Vite production bundle built cleanly in 29.55s).
+
+
