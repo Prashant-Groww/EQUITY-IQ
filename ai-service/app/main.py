@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 
 from app.core.config import settings
-from app.routers import ml, risk, report, rag, chat
+from app.routers import ml, risk, report, rag, chat, portfolio
 
 # Configure Loguru structured logger
 logger.remove()
@@ -37,6 +37,7 @@ app.include_router(risk.router)
 app.include_router(report.router)
 app.include_router(rag.router)
 app.include_router(chat.router)
+app.include_router(portfolio.router)
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
