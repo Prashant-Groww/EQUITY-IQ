@@ -5,10 +5,18 @@ const StockMarketData = require('../models/StockMarketData');
 const MarketUpdateStatus = require('../models/MarketUpdateStatus');
 const { fetchLatestMarketData, formatNSESymbol } = require('../services/marketDataFetcher');
 const { seedStockMasterIfEmpty, runDailyMarketDataUpdate } = require('../services/marketUpdateJob');
+const { connectDB, disconnectDB } = require('../config/db');
 
 jest.setTimeout(30000);
 
 describe('Daily Indian Stock Price Update System Integration Tests', () => {
+  beforeAll(async () => {
+    await connectDB(2, 1000);
+  });
+
+  afterAll(async () => {
+    await disconnectDB();
+  });
   describe('Symbol Formatter & Parser', () => {
     it('should format NSE symbols correctly without duplications', () => {
       expect(formatNSESymbol('TCS')).toEqual({ cleanSymbol: 'TCS', nseSymbol: 'TCS.NS' });
