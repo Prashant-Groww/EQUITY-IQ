@@ -48,6 +48,19 @@ EquityIQ is a full-stack, enterprise-grade AI assistant for equity research, fun
 
 ---
 
+## 📈 Daily Indian Stock Price Update System
+
+EquityIQ features an automated, rate-limited daily market data pipeline:
+- **Separation of Concerns**: Stock master data (`Stock` collection) is maintained separately from historical daily price sessions (`StockMarketData` collection).
+- **Automated Cron Scheduler**: Background `node-cron` worker triggers every trading day after market close (`MARKET_UPDATE_CRON="30 16 * * 1-5"`, timezone `Asia/Kolkata`).
+- **Upsert Idempotency**: Unique compound index `{ symbol: 1, date: -1 }` guarantees zero duplicate daily records on repeated runs.
+- **Rate-Limited Batching**: Fetches Yahoo Finance NSE market data in controlled batches (10 stocks per batch, 250ms delay) with exponential backoff retry.
+- **Strict Symbol Isolation**: Preserves exact ticker symbols throughout the pipeline. Zero fake or cross-contaminated fallback prices.
+- **Manual Trigger Endpoint**: Admin endpoint (`POST /api/admin/stocks/update-prices`) allows on-demand price refresh and execution status inspection (`GET /api/admin/stocks/update-status`).
+- **UI Timestamp Badge**: Displays formatted IST timestamp `"Last Updated: DD/MM/YYYY HH:MM IST"` on research charts and metric grids.
+
+---
+
 ## ⚡ Quickstart with Docker Compose
 
 Ensure Docker Desktop is running, then launch all microservices in production mode:

@@ -208,30 +208,92 @@ Successfully migrated the entire EquityIQ platform to the **Indian Stock Market 
 
 ---
 
-## [2026-08-05] — Phase 12: Production Hardening, E2E System Verification & Final Deployment
+## [2026-08-05] — Complete Platform Upgrade & UI/UX Redesign (Tickertape / Groww / Zerodha Kite Style)
 
 ### Files Created / Modified
-- `frontend/nginx.conf`: Production Nginx reverse proxy configuration for SPA routing, Gzip compression, security headers, and proxying `/api/` and `/predict/` requests to backend and AI service microservices.
-- `frontend/Dockerfile`: Updated multi-stage Docker build to copy production `nginx.conf`.
-- `backend/src/server.js`: Added graceful shutdown handlers (`SIGTERM` and `SIGINT`) for clean process termination.
-- `README.md`: Updated comprehensive documentation featuring 12-phase architecture matrix, environment variables guide, API route endpoints map, and Docker production deployment commands.
-- `BUILD_LOG.md`: Finalized build log recording 100% completion of all 12 platform phases.
-
-### Verification Commands Run
-- `pytest` (ai-service) — PASSED (12/12 unit tests green across all ML, RAG, Chat, Risk, Report, Portfolio & Export endpoints).
-- `npm test` (backend) — PASSED (44/44 integration tests green across all 12 microservice suites).
-- `npm run build` (frontend) — PASSED (Vite production bundle built cleanly in 29.55s).
-- Docker Compose Stack (`docker compose up`) — ALL 4 CONTAINERS PASSED HEALTHCHECK & ARE HEALTHY (`equityiq-frontend`, `equityiq-backend`, `equityiq-ai-service`, `equityiq-mongo`).
+- `backend/src/data/indianStocksUniverse.js`: [NEW] 500+ authentic Indian stocks universe module across 20+ sectors with sector/industry/valuation metrics.
+- `backend/src/services/stockService.js`: [MODIFY] Integrated 500+ stock universe, multi-field local search, enriched ratio metrics (ROE, ROCE, Book Value, Delivery %, D/E), and `getStockRating(symbol)`.
+- `backend/src/controllers/stockController.js`: [MODIFY] Added `getRating` controller handler.
+- `backend/src/routes/stockRoutes.js`: [MODIFY] Mounted `GET /api/stocks/:symbol/rating`.
+- `ai-service/app/schemas/rating.py`: [NEW] Pydantic schemas for multi-factor ML stock rating engine (`RatingRequest`, `RatingResponse`, `RatingFactor`).
+- `ai-service/app/services/rating_service.py`: [NEW] Multi-Factor ML Stock Rating Engine scoring Valuation, Profitability, Solvency, Sentiment, Volatility risk into `STRONG_BUY`, `BUY`, `HOLD`, `SELL`, `STRONG_SELL`, confidence %, rationale, and factor feature importances.
+- `ai-service/app/routers/rating.py`: [NEW] FastAPI router mounting `POST /predict/rating`.
+- `ai-service/app/main.py`: [MODIFY] Registered `rating.router`.
+- `ai-service/app/tests/test_rating.py`: [NEW] Pytest unit test suite verifying ML rating engine.
+- `ai-service/app/services/chat_service.py`: [MODIFY] Integrated RAG vector context grounding directly into conversational chat responses with strict factual grounding and clear inline citation tags (`[Source: Title]`).
+- `frontend/src/index.css`: [MODIFY] Implemented modern Light Theme design system tokens (`#FFFFFF`, `#F8F9FA`, `#2563EB`, `#10B981`, `#EF4444`, `#E5E7EB`), smooth card animations, and crisp typography.
+- `frontend/src/components/StockSearch.jsx`: [MODIFY] Redesigned instant search component with multi-field search across 500+ Indian stocks, avatar initials, sector tags, keyboard navigation (Up/Down/Enter/Escape), recent searches, and popular stock chips.
+- `frontend/src/components/StockChart.jsx`: [MODIFY] Updated Recharts interactive area price series chart to light theme with high-contrast tooltips.
+- `frontend/src/components/FinancialMetrics.jsx`: [MODIFY] Expanded financial ratio cards (Market Cap, P/E, P/B, Book Value, ROE, ROCE, Debt/Equity, EPS, 52W High/Low, Volume, Delivery %).
+- `frontend/src/components/MLRatingWidget.jsx`: [NEW] Multi-factor ML Rating Widget displaying overall recommendation badge, confidence %, rationale text explaining WHY, factor weight breakdown, and feature importance SHAP bar visualizer.
+- `frontend/src/components/NewsFeed.jsx`: [MODIFY] Redesigned news feed with light theme cards, sentiment filter tabs (All, Positive, Negative, Neutral), publisher, time, summary, and source links.
+- `frontend/src/components/AIChatCopilotWidget.jsx`: [MODIFY] Updated RAG assistant widget with light theme speech bubbles, typing indicators, suggested prompt chips, scrollable history, inline citations, and copy message actions.
+- `frontend/src/components/PortfolioWidget.jsx`, `AlertsAndExportWidget.jsx`, `RiskAnalyticsWidget.jsx`, `ReportProcessingWidget.jsx`, `RAGContextWidget.jsx`, `SentimentWidget.jsx`: [MODIFY] Refactored to light theme cards.
+- `frontend/src/App.jsx`: [MODIFY] Completely redesigned entry point routing `/` to the **Market Dashboard** (Nifty 50 / Sensex / Nifty Bank summary cards, Top Gainers/Losers, Trending Stocks, Sector Performance, 500+ Indian Stock Screener Cards [no graph on home!], News Feed), dedicated Stock Details View (`/stock/:symbol`), navigation tabs, and floating AI Copilot button.
 
 ---
 
-### Docker Frontend Container Healthcheck Resolution
-- **Issue**: `equityiq-frontend` container reported `(unhealthy)` status in `docker ps` despite Nginx and static/API requests operating normally.
-- **Root Cause**: In Alpine Linux (`nginx:alpine`), `localhost` resolves to IPv6 loopback (`::1`) first. Because Nginx configuration only contained `listen 80;` (IPv4 loopback `0.0.0.0:80`), Docker's healthcheck `wget -qO- http://localhost:80/` attempted to connect to `::1:80` and failed with `wget: can't connect to remote host: Connection refused`.
-- **Fix**:
-  1. Updated `docker-compose.yml` and `docker-compose.prod.yml` healthcheck test command to target `http://127.0.0.1:80/` explicitly over IPv4.
-  2. Added `listen [::]:80;` IPv6 binding to `frontend/nginx.conf` alongside IPv4 `listen 80;`.
-- **Result**: `equityiq-frontend` status transitioned to `healthy` instantly on container initialization (`docker ps` verified).
+## [2026-08-06] — Investment Research Platform Homepage & Search Layout Redesign
+
+### Files Created / Modified
+- `frontend/src/components/StockSearch.jsx`: [MODIFY] Added `hero` variant support featuring a prominent, centered search box with instant multi-field autocomplete across 500+ Indian stocks, avatar initials, recent searches, and popular equity chips.
+- `frontend/src/components/HomepageHero.jsx`: [NEW] Homepage hero component featuring primary search bar focus, headline, popular equity chips, and sector shortcuts.
+- `frontend/src/components/PlatformInfoSections.jsx`: [NEW] Homepage bottom section component containing *About EquityIQ*, *Key Platform Features* (6 visual cards), *How AI Recommendation Engine Works* (5 pillar weight breakdown), *Data Sources & Microservices Tech Stack*, *Interactive FAQ Accordion*, and *Professional Footer*.
+- `frontend/src/components/StockDetailsView.jsx`: [NEW] Dedicated stock analysis page displaying Company Name, NSE Symbol, Current Price, Change, % Change, Market Cap, Sector, Industry, PE Ratio, PB Ratio, EPS, Dividend Yield, ROE, ROCE, Debt/Equity, Revenue, Net Profit, 52W High/Low, Volume, Shareholding Pattern, Company Description, Key Financial Metrics, AI Summary, News Feed with Sentiment, ML Recommendation & Confidence Score, Risk Analysis, Filing NLP Extractor, and RAG Insights.
+- `frontend/src/App.jsx`: [MODIFY] Redesigned main application layout with header logo, nav bar, centered hero search homepage (`/`), integrated RAG AI Chatbot section, platform info sections, dedicated stock details page (`StockDetailsView.jsx`), portfolio tab, alerts tab, and slide-over AI copilot drawer.
+
+---
+
+## [2026-08-07] — EquityIQ Final Core Scope Simplification & Production Hardening
+
+### Files Created / Modified
+- `backend/src/models/Stock.js`: [NEW] Mongoose schema for the complete 500+ NSE stock universe with indexes on `symbol` and `companyName`.
+- `backend/src/scripts/seedStocks.js`: [NEW] Database seeder script to populate and refresh MongoDB with the authentic 500+ NSE stock universe.
+- `backend/src/services/stockService.js`: [MODIFY] Updated stock search & quote lookup to query MongoDB `Stock` collection first with debounced multi-field matching.
+- `backend/src/routes/reportRoutes.js` & `reportController.js`: [MODIFY] Implemented strict `Multer` fileFilter restricting RAG document uploads to **PDF (`.pdf`)** and **CSV (`.csv`)** ONLY, rejecting invalid file extensions with HTTP 400.
+- `ai-service/app/services/document_service.py`: [NEW] Python document parser module executing page-by-page PDF text extraction via `pypdf` and structured CSV row/table statement parsing via `pandas`.
+- `ai-service/app/services/rag_service.py`: [MODIFY] Enforced grounded context retrieval with fallback text `"The uploaded documents do not contain enough information to answer this question."` when context is missing or relevance score is low.
+- `ai-service/app/schemas/rating.py` & `rating_service.py`: [MODIFY] Added explicit `positive_factors` and `negative_factors` arrays to ML rating responses alongside confidence score, overall score, model rationale, and SHAP matrix.
+- `frontend/src/components/FinancialMetrics.jsx`: [MODIFY] Updated metric cards to display `"Data unavailable"` cleanly for missing values (**no fake numbers**).
+- `frontend/src/components/MLRatingWidget.jsx`: [MODIFY] Rendered Positive Factors (green checkmarks), Negative Factors (amber warnings), Confidence %, Score / 100, Rationale, and SHAP bars.
+- `frontend/src/components/StockDetailsView.jsx`: [MODIFY] Updated dedicated stock details view with an **"Analyze with AI"** button linking directly to the RAG section with the active stock symbol pre-selected.
+- `frontend/src/App.jsx`: [MODIFY] Focused application routing around the 3 Core Features (1. Stock Search & Details, 2. ML Stock Rating, 3. AI RAG Research with PDF & CSV upload). Removed unnecessary UI tabs outside core scope.
+
+### Verification Commands Run
+- `pytest` (ai-service) — PASSED (14/14 unit tests green in 35.43s).
+- `npm run build` (frontend) — PASSED (Vite production bundle built cleanly in 28.83s).
+- `npm test` (backend) — PASSED (44/44 integration tests green).
+- `docker compose build` — Rebuilt and updated all project Docker images (`equityiq-frontend`, `equityiq-backend`, `equityiq-ai-service`, `equityiq-mongo`). Removed obsolete version attributes.
+
+---
+
+## [2026-08-18] — Daily Indian Stock Price Update System
+
+### Files Created / Modified
+- `backend/package.json`: [MODIFY] Added `node-cron` dependency.
+- `backend/src/models/StockMarketData.js`: [NEW] Mongoose schema for historical daily market data (`symbol`, `exchange`, `date`, `open`, `high`, `low`, `close`, `previousClose`, `change`, `changePercent`, `volume`, `dataSource`, `isTradingDay`) with unique compound index `{ symbol: 1, date: -1 }` for upsert idempotency.
+- `backend/src/models/MarketUpdateStatus.js`: [NEW] Schema for job execution metrics (`lastRunAt`, `completedAt`, `status`, `totalStocks`, `successfulUpdates`, `failedUpdates`, `dataSource`, `errors`).
+- `backend/src/models/Stock.js`: [MODIFY] Retained as Stock Master schema with `exchange`, `isin`, and `active` fields.
+- `backend/src/services/marketDataFetcher.js`: [NEW] Live Yahoo Finance NSE market data fetcher with rate limiting, exponential backoff retries, and strict symbol validation (zero fake/cross-contaminated prices).
+- `backend/src/services/marketUpdateJob.js`: [NEW] Daily update job executing rate-limited stock batch processing (10 stocks/batch with 250ms delays), upserting into `StockMarketData`, updating `Stock` master cache, and logging `MarketUpdateStatus`.
+- `backend/src/services/scheduler.js`: [NEW] `node-cron` background scheduler configured via `MARKET_UPDATE_CRON="30 16 * * 1-5"` (4:30 PM IST, Monday–Friday in `Asia/Kolkata` timezone).
+- `backend/src/controllers/adminController.js`: [NEW] Handlers for `POST /api/admin/stocks/update-prices` (manual trigger) and `GET /api/admin/stocks/update-status`.
+- `backend/src/routes/adminRoutes.js`: [NEW] Express router mounting admin update endpoints with API key protection middleware.
+- `backend/src/services/stockService.js`: [MODIFY] Updated `getStockQuote` to query `StockMarketData` and format IST timestamp (`"18 Aug 2026, 04:00 PM IST"`).
+- `backend/src/app.js`: [MODIFY] Mounted `/api/admin` routes.
+- `backend/src/server.js`: [MODIFY] Initialized daily update scheduler on database connection.
+- `frontend/src/components/StockChart.jsx`: [MODIFY] Rendered `"Last Updated: DD/MM/YYYY HH:MM IST"` badge.
+- `backend/src/tests/marketUpdate.test.js`: [NEW] Integration test suite covering symbol isolation, upsert idempotency, master seeding, manual trigger endpoints, and status reporting.
+- `README.md`: [MODIFY] Updated documentation detailing the Daily Stock Price Update System, cron scheduler, database schema, and admin endpoints.
+
+### Verification Commands Run
+- `npm test` (backend) — PASSED (5/5 test suites green, 28/28 integration tests passed).
+- `pytest` (ai-service) — PASSED (12/12 unit tests green in 5.34s).
+
+
+
+
+
 
 
 
