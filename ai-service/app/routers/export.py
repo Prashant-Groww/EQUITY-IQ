@@ -10,9 +10,11 @@ async def generate_research_brief_endpoint(request: ResearchBriefRequest):
     POST /predict/research-brief
     Generates a formal, multi-section AI Equity Research Brief combining valuation, risk tier, sentiment, and filing context.
     """
+    if not request.symbol or not request.symbol.strip():
+        raise HTTPException(status_code=400, detail="Stock symbol parameter is required.")
     try:
-        if not request.symbol or not request.symbol.strip():
-            raise HTTPException(status_code=400, detail="Stock symbol parameter is required.")
         return brief_generator_service.generate_brief(request)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Research brief generation failed: {str(e)}")

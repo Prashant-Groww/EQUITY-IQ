@@ -72,9 +72,27 @@ const getFinancials = async (req, res, next) => {
   }
 };
 
+const getRating = async (req, res, next) => {
+  try {
+    const { symbol } = req.params;
+    if (!symbol || symbol.trim().length === 0) {
+      const error = new Error('Stock symbol parameter is required');
+      error.statusCode = 400;
+      error.code = 'INVALID_SYMBOL';
+      return next(error);
+    }
+
+    const ratingData = await stockService.getStockRating(symbol.trim());
+    res.status(200).json(ratingData);
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   searchStocks,
   getQuote,
   getHistory,
   getFinancials,
+  getRating,
 };

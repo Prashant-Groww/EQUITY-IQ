@@ -60,21 +60,21 @@ export default function SentimentWidget() {
   };
 
   return (
-    <div className="glass-card rounded-2xl p-6 flex flex-col gap-6">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col gap-6">
       {/* Widget Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div className="flex items-center justify-between border-b border-slate-100 pb-5">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+          <div className="p-3 rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
             <Brain className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              ML Indian Equity Sentiment Classifier
-              <span className="text-[10px] font-mono font-normal px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                TF-IDF + LogisticRegression
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              FinBERT Financial NLP Sentiment Analyzer
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                ProsusAI FinBERT Engine
               </span>
             </h3>
-            <p className="text-xs text-slate-400">Classifies Indian corporate & news headlines into market signals</p>
+            <p className="text-xs text-slate-500">Real-time domain-specific financial NLP sentiment scoring & polarity metrics</p>
           </div>
         </div>
       </div>

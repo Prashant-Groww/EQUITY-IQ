@@ -58,21 +58,21 @@ export default function RiskAnalyticsWidget({ symbol }) {
   const metrics = riskData?.metrics || {};
 
   return (
-    <div className="glass-card rounded-2xl p-6 flex flex-col gap-6">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col gap-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+          <div className="p-3 rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
             <ShieldAlert className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               ML Quantitative Risk & Volatility Model
-              <span className="text-[10px] font-mono font-normal px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
                 GradientBoosting Regressor
               </span>
             </h3>
-            <p className="text-xs text-slate-400">Risk parameters evaluated against Nifty 50 benchmark index</p>
+            <p className="text-xs text-slate-500">Risk parameters evaluated against Nifty 50 benchmark index</p>
           </div>
         </div>
 

@@ -38,21 +38,21 @@ export default function RAGContextWidget({ symbol }) {
   };
 
   return (
-    <div className="glass-card rounded-2xl p-6 flex flex-col gap-6">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col gap-6">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div className="flex items-center justify-between border-b border-slate-100 pb-5">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+          <div className="p-3 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
             <Database className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               RAG Knowledge Index & Vector Retrieval
-              <span className="text-[10px] font-mono font-normal px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                TF-IDF + Cosine Similarity Indexer
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                Dense Vector & Dense Retriever Indexer
               </span>
             </h3>
-            <p className="text-xs text-slate-400">Semantic vector retrieval over news feeds, annual reports, and stock fundamentals</p>
+            <p className="text-xs text-slate-500">Semantic vector retrieval over news feeds, annual reports, and stock fundamentals</p>
           </div>
         </div>
       </div>

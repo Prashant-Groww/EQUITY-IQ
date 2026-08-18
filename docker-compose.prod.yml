@@ -1,6 +1,5 @@
-version: '3.8'
-
 services:
+
   mongo:
     image: mongo:7.0
     container_name: equityiq-mongo-prod

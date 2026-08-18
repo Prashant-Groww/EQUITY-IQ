@@ -154,21 +154,21 @@ export default function PortfolioWidget({ activeSymbol, onSelectSymbol }) {
   );
 
   return (
-    <div className="bg-[#131A29]/90 border border-slate-800/90 rounded-2xl p-6 shadow-xl backdrop-blur-sm flex flex-col gap-6">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col gap-6">
       {/* Header & Watchlist Toggle Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-            <Briefcase className="h-5 w-5 text-white" />
+          <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center border border-blue-100">
+            <Briefcase className="h-5 w-5 text-blue-600" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-bold text-white tracking-tight">Portfolio & Watchlist Analytics</h3>
-              <span className="px-2 py-0.5 text-[10px] font-mono font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight">Portfolio & Watchlist Analytics</h3>
+              <span className="px-2 py-0.5 text-[10px] font-mono font-bold rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
                 ₹ INR Indian Market
               </span>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               Live Holdings Valuation, Watchlist Strip & AI Rebalancing Advisor
             </p>
           </div>

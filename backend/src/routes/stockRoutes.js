@@ -7,5 +7,6 @@ router.get('/search', stockController.searchStocks);
 router.get('/:symbol/quote', stockController.getQuote);
 router.get('/:symbol/history', stockController.getHistory);
 router.get('/:symbol/financials', stockController.getFinancials);
+router.get('/:symbol/rating', stockController.getRating);
 
 module.exports = router;

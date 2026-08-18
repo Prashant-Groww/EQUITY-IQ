@@ -81,21 +81,21 @@ export default function ReportProcessingWidget({ symbol }) {
   };
 
   return (
-    <div className="glass-card rounded-2xl p-6 flex flex-col gap-6">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col gap-6">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div className="flex items-center justify-between border-b border-slate-100 pb-5">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+          <div className="p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
             <FileText className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               Corporate Report Processing & NLP Extraction
-              <span className="text-[10px] font-mono font-normal px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                 PDF / Text NLP Parser
               </span>
             </h3>
-            <p className="text-xs text-slate-400">Extracts financial metrics, growth catalysts & risk disclosures from filing reports</p>
+            <p className="text-xs text-slate-500">Extracts financial metrics, growth catalysts & risk disclosures from filing reports</p>
           </div>
         </div>
       </div>
@@ -106,10 +106,11 @@ export default function ReportProcessingWidget({ symbol }) {
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <label className="text-xs font-medium text-slate-300">Corporate Report Text Content</label>
-            <label className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 cursor-pointer font-bold transition">
-              <Upload className="h-3.5 w-3.5" /> Upload File (.txt, .csv)
-              <input type="file" accept=".txt,.csv,.json,.md" onChange={handleFileUpload} className="hidden" />
+            <label className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 cursor-pointer font-bold transition">
+              <Upload className="h-3.5 w-3.5" /> Upload RAG Document (.pdf, .csv)
+              <input type="file" accept=".pdf,.csv" onChange={handleFileUpload} className="hidden" />
             </label>
+
           </div>
 
           <input
