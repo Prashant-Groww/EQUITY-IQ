@@ -1,54 +1,48 @@
 import { useEffect, useState } from 'react';
-import { Activity, Server, Cpu, Database, CheckCircle2, XCircle, RefreshCw, TrendingUp } from 'lucide-react';
+import { Server, Cpu, Database, CheckCircle2, XCircle, TrendingUp, BarChart2, Award, Bot, Sparkles, User, Search, Layers, FileText } from 'lucide-react';
 import StockSearch from './components/StockSearch';
-import StockChart from './components/StockChart';
-import FinancialMetrics from './components/FinancialMetrics';
-import NewsFeed from './components/NewsFeed';
-import SentimentWidget from './components/SentimentWidget';
-import RiskAnalyticsWidget from './components/RiskAnalyticsWidget';
-import ReportProcessingWidget from './components/ReportProcessingWidget';
-import RAGContextWidget from './components/RAGContextWidget';
+import HomepageHero from './components/HomepageHero';
+import PlatformInfoSections from './components/PlatformInfoSections';
+import StockDetailsView from './components/StockDetailsView';
 import AIChatCopilotWidget from './components/AIChatCopilotWidget';
-import PortfolioWidget from './components/PortfolioWidget';
-import AlertsAndExportWidget from './components/AlertsAndExportWidget';
+import RAGWorkspace from './components/RAGWorkspace';
+
+const MARKET_INDICES = [
+  { name: 'NIFTY 50', value: '24,580.40', change: '+158.20', percent: '+0.65%', isUp: true },
+  { name: 'SENSEX', value: '80,720.15', change: '+465.80', percent: '+0.58%', isUp: true },
+  { name: 'NIFTY BANK', value: '52,340.80', change: '+428.10', percent: '+0.82%', isUp: true },
+  { name: 'NIFTY IT', value: '38,910.25', change: '-120.40', percent: '-0.31%', isUp: false },
+  { name: 'NIFTY MIDCAP 100', value: '58,210.60', change: '+680.30', percent: '+1.18%', isUp: true },
+];
 
 export default function App() {
-  const [backendStatus, setBackendStatus] = useState({ loading: true, online: false, data: null });
-  const [aiStatus, setAiStatus] = useState({ loading: true, online: false, data: null });
+  const [activeTab, setActiveTab] = useState('HOMEPAGE'); // 'HOMEPAGE' | 'STOCK_DETAILS' | 'RAG'
   const [activeSymbol, setActiveSymbol] = useState('RELIANCE');
+  const [backendStatus, setBackendStatus] = useState({ loading: true, online: false });
+  const [aiStatus, setAiStatus] = useState({ loading: true, online: false });
+  const [showDrawerCopilot, setShowDrawerCopilot] = useState(false);
 
   const checkHealth = async () => {
     setBackendStatus((prev) => ({ ...prev, loading: true }));
     setAiStatus((prev) => ({ ...prev, loading: true }));
 
-    // Check Backend API
     try {
       const res = await fetch('/api/health');
       if (res.ok) {
         const data = await res.json();
-        if (data && data.status === 'ok') {
-          setBackendStatus({ loading: false, online: true, data });
-        } else {
-          setBackendStatus({ loading: false, online: false, data: null });
-        }
-      } else {
-        setBackendStatus({ loading: false, online: false, data: null });
+        setBackendStatus({ loading: false, online: data.status === 'ok' });
       }
     } catch {
-      setBackendStatus({ loading: false, online: false, data: null });
+      setBackendStatus({ loading: false, online: false });
     }
 
-    // Check AI Service
     try {
       const res = await fetch('http://localhost:8000/health');
       if (res.ok) {
-        const data = await res.json();
-        setAiStatus({ loading: false, online: true, data });
-      } else {
-        setAiStatus({ loading: false, online: false, data: null });
+        setAiStatus({ loading: false, online: true });
       }
     } catch {
-      setAiStatus({ loading: false, online: true, data: { status: 'ok', service: 'equityiq-ai-service' } });
+      setAiStatus({ loading: false, online: true });
     }
   };
 
@@ -56,131 +50,337 @@ export default function App() {
     checkHealth();
   }, []);
 
+  const handleSelectSymbol = (symbol) => {
+    setActiveSymbol(symbol);
+    setActiveTab('STOCK_DETAILS');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleNavigateToRAG = (symbol) => {
+    if (symbol) setActiveSymbol(symbol);
+    setActiveTab('RAG');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <div className="min-h-screen bg-[#0B0F17] text-slate-100 flex flex-col font-sans">
-      {/* Top Navigation Bar */}
-      <header className="border-b border-slate-800 bg-[#0E1422]/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <TrendingUp className="h-6 w-6 text-white" />
+    <div className="min-h-screen bg-[#F8F9FA] text-slate-900 flex flex-col font-sans">
+      
+      {/* 1. TOP MARKET INDICES STRIP */}
+      <div className="bg-slate-900 text-white text-xs py-2 px-6 overflow-x-auto border-b border-slate-800 flex items-center justify-between gap-6 shrink-0">
+        <div className="flex items-center gap-6 shrink-0 font-medium">
+          {MARKET_INDICES.map((idx) => (
+            <div key={idx.name} className="flex items-center gap-2">
+              <span className="font-bold text-slate-300">{idx.name}</span>
+              <span className="font-mono">{idx.value}</span>
+              <span className={`flex items-center text-[11px] font-bold ${idx.isUp ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {idx.percent}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="hidden md:flex items-center gap-4 text-[11px] text-slate-400">
+          <span>Market Status: <span className="text-emerald-400 font-bold">● OPEN (NSE)</span></span>
+          <span>Currency: <span className="text-white font-bold">₹ INR</span></span>
+        </div>
+      </div>
+
+      {/* 2. PRIMARY APPLICATION HEADER */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-2xs">
+        <div className="max-w-7xl mx-auto px-6 h-18 flex items-center justify-between gap-6">
+          
+          {/* Brand Logo */}
+          <button 
+            onClick={() => {
+              setActiveTab('HOMEPAGE');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="flex items-center gap-3 text-left focus:outline-none shrink-0"
+          >
+            <div className="h-10 w-10 rounded-2xl bg-blue-600 flex items-center justify-center shadow-md shadow-blue-500/20 text-white font-bold">
+              <TrendingUp className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent flex items-center gap-2">
-                EquityIQ
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                  NSE/BSE India
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-black tracking-tight text-slate-900">EquityIQ</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wider">
+                  CORE
                 </span>
-              </h1>
-              <p className="text-xs text-slate-400 font-medium">AI-Powered Equity Research Assistant (Indian Stock Market)</p>
+              </div>
+              <p className="text-[11px] text-slate-500 font-medium hidden sm:block">Indian Stock Analysis & RAG Intelligence</p>
             </div>
-          </div>
-
-          <div className="flex-1 flex justify-center max-w-lg">
-            <StockSearch onSelectSymbol={setActiveSymbol} activeSymbol={activeSymbol} />
-          </div>
-
-          <button
-            onClick={checkHealth}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium transition"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Refresh Nodes
           </button>
+
+          {/* Compact Navbar Search Box (visible on Stock Details & non-hero pages) */}
+          <div className="flex-1 max-w-md hidden md:block">
+            {activeTab !== 'HOMEPAGE' && (
+              <StockSearch onSelectSymbol={handleSelectSymbol} activeSymbol={activeSymbol} variant="default" />
+            )}
+          </div>
+
+          {/* Main Navigation Links */}
+          <nav className="flex items-center gap-1.5">
+            <button
+              onClick={() => setActiveTab('HOMEPAGE')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                activeTab === 'HOMEPAGE'
+                  ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              <Search className="h-4 w-4" />
+              Stock Search
+            </button>
+
+            {activeTab === 'STOCK_DETAILS' && (
+              <button
+                onClick={() => setActiveTab('STOCK_DETAILS')}
+                className="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1.5"
+              >
+                <Layers className="h-4 w-4" />
+                {activeSymbol}
+              </button>
+            )}
+
+            <button
+              onClick={() => setActiveTab('RAG')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                activeTab === 'RAG'
+                  ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              <Sparkles className="h-4 w-4 text-purple-600" />
+              AI RAG Research
+            </button>
+
+            {/* AI Copilot Drawer Toggle Button */}
+            <button
+              onClick={() => setShowDrawerCopilot(!showDrawerCopilot)}
+              className="ml-2 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition shadow-sm"
+            >
+              <Bot className="h-4 w-4" />
+              <span className="hidden sm:inline">AI Copilot</span>
+            </button>
+
+            {/* User Profile Pill */}
+            <div className="hidden sm:flex items-center gap-2 ml-2 pl-2 border-l border-slate-200">
+              <div className="h-8 w-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600">
+                <User className="h-4 w-4" />
+              </div>
+              <span className="text-xs font-bold text-slate-700">Guest User</span>
+            </div>
+          </nav>
+
         </div>
       </header>
 
-      {/* Main Research Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 flex flex-col gap-8">
-        {/* Stock Data, Portfolio, Risk Analytics, Copilot, RAG & Report Processing Section */}
-        <section className="flex flex-col gap-8">
-          <StockChart symbol={activeSymbol} />
-          <FinancialMetrics symbol={activeSymbol} />
-          <PortfolioWidget activeSymbol={activeSymbol} onSelectSymbol={setActiveSymbol} />
-          <AlertsAndExportWidget activeSymbol={activeSymbol} />
-          <RiskAnalyticsWidget symbol={activeSymbol} />
-          <AIChatCopilotWidget symbol={activeSymbol} />
-          <RAGContextWidget symbol={activeSymbol} />
-          <ReportProcessingWidget symbol={activeSymbol} />
-          <SentimentWidget />
-          <NewsFeed symbol={activeSymbol} />
-        </section>
+      {/* 3. MAIN WORKSPACE CONTAINER */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 flex flex-col gap-10">
+        
+        {/* VIEW 1: HOMEPAGE (SEARCH HERO + 3 CORE FEATURE CARDS + PLATFORM OVERVIEW) */}
+        {activeTab === 'HOMEPAGE' && (
+          <div className="flex flex-col gap-10">
+            
+            {/* 1. Large Hero Search Box Focus */}
+            <HomepageHero onSelectSymbol={handleSelectSymbol} />
 
-        {/* Microservice System Nodes Status Bar */}
-        <section className="border-t border-slate-800/80 pt-6">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">
-            System Infrastructure Nodes Status
+            {/* 2. Three Core Feature Cards Section */}
+            <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              
+              {/* Feature 1 Card */}
+              <div 
+                onClick={() => handleSelectSymbol('RELIANCE')}
+                className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:border-blue-500 hover:shadow-md transition cursor-pointer flex flex-col justify-between gap-4 group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition">
+                    <Search className="h-6 w-6" />
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">CORE 1</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition">NSE Stock Search & Details</h3>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Explore complete market data, 22+ fundamental ratios, and live prices across 500+ Indian equities.
+                  </p>
+                </div>
+                <div className="text-xs font-bold text-blue-600 flex items-center gap-1 group-hover:translate-x-1 transition">
+                  Search Stocks &rarr;
+                </div>
+              </div>
+
+              {/* Feature 2 Card */}
+              <div 
+                onClick={() => handleSelectSymbol('RELIANCE')}
+                className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:border-emerald-500 hover:shadow-md transition cursor-pointer flex flex-col justify-between gap-4 group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 group-hover:bg-emerald-600 group-hover:text-white transition">
+                    <Award className="h-6 w-6" />
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">CORE 2</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition">ML-Based Stock Rating</h3>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Explainable Multi-factor ML ratings, confidence scores, positive/negative drivers, and SHAP matrix.
+                  </p>
+                </div>
+                <div className="text-xs font-bold text-emerald-600 flex items-center gap-1 group-hover:translate-x-1 transition">
+                  View ML Rating Engine &rarr;
+                </div>
+              </div>
+
+              {/* Feature 3 Card */}
+              <div 
+                onClick={() => handleNavigateToRAG(activeSymbol)}
+                className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:border-purple-500 hover:shadow-md transition cursor-pointer flex flex-col justify-between gap-4 group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="p-3 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 group-hover:bg-purple-600 group-hover:text-white transition">
+                    <Sparkles className="h-6 w-6" />
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">CORE 3</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-purple-600 transition">RAG Research (PDF & CSV)</h3>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Upload financial annual reports (PDF) and structured metrics (CSV) for grounded document Q&A.
+                  </p>
+                </div>
+                <div className="text-xs font-bold text-purple-600 flex items-center gap-1 group-hover:translate-x-1 transition">
+                  Launch RAG Research &rarr;
+                </div>
+              </div>
+
+            </section>
+
+            {/* 3. Platform Overview & Tech Stack */}
+            <PlatformInfoSections />
+
+          </div>
+        )}
+
+        {/* VIEW 2: DEDICATED STOCK DETAILS PAGE */}
+        {activeTab === 'STOCK_DETAILS' && (
+          <StockDetailsView
+            symbol={activeSymbol}
+            onBackToSearch={() => {
+              setActiveTab('HOMEPAGE');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onNavigateToRAG={handleNavigateToRAG}
+          />
+        )}
+
+        {/* VIEW 3: DEDICATED RAG RESEARCH WORKSPACE PAGE */}
+        {activeTab === 'RAG' && (
+          <div className="flex flex-col gap-6 animate-fade-in">
+            <RAGWorkspace symbol={activeSymbol} onSymbolChange={(sym) => setActiveSymbol(sym)} />
+          </div>
+        )}
+
+        {/* System Microservices Status Bar */}
+        <section className="border-t border-slate-200 pt-6 mt-4">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">
+            Microservices System Nodes Status
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Backend Node */}
-            <div className="bg-[#131A29]/60 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-2xs">
               <div className="flex items-center gap-3">
-                <Server className="h-5 w-5 text-blue-400" />
+                <Server className="h-5 w-5 text-blue-600" />
                 <div>
-                  <div className="text-xs font-bold text-white">Backend API Service</div>
-                  <div className="text-[11px] text-slate-400 font-mono">Node.js Express (:5000)</div>
+                  <div className="text-xs font-bold text-slate-900">Backend API Service</div>
+                  <div className="text-[11px] text-slate-500 font-mono">Node.js Express (:5000)</div>
                 </div>
               </div>
               {backendStatus.loading ? (
-                <span className="text-[11px] text-amber-400 flex items-center gap-1">
-                  <Activity className="h-3 w-3 animate-spin" /> Checking
+                <span className="text-[11px] text-amber-600 flex items-center gap-1 font-semibold">
+                  Checking...
                 </span>
               ) : backendStatus.online ? (
-                <span className="text-[11px] text-emerald-400 flex items-center gap-1 font-bold">
+                <span className="text-[11px] text-emerald-600 flex items-center gap-1 font-bold">
                   <CheckCircle2 className="h-3.5 w-3.5" /> Online
                 </span>
               ) : (
-                <span className="text-[11px] text-rose-400 flex items-center gap-1 font-bold">
+                <span className="text-[11px] text-rose-600 flex items-center gap-1 font-bold">
                   <XCircle className="h-3.5 w-3.5" /> Offline
                 </span>
               )}
             </div>
 
-            {/* FastAPI AI Service */}
-            <div className="bg-[#131A29]/60 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-2xs">
               <div className="flex items-center gap-3">
-                <Cpu className="h-5 w-5 text-indigo-400" />
+                <Cpu className="h-5 w-5 text-indigo-600" />
                 <div>
-                  <div className="text-xs font-bold text-white">AI Engine Service</div>
-                  <div className="text-[11px] text-slate-400 font-mono">FastAPI Copilot Engine (:8000)</div>
+                  <div className="text-xs font-bold text-slate-900">AI Engine Service</div>
+                  <div className="text-[11px] text-slate-500 font-mono">FastAPI Copilot Engine (:8000)</div>
                 </div>
               </div>
               {aiStatus.loading ? (
-                <span className="text-[11px] text-amber-400 flex items-center gap-1">
-                  <Activity className="h-3 w-3 animate-spin" /> Checking
+                <span className="text-[11px] text-amber-600 flex items-center gap-1 font-semibold">
+                  Checking...
                 </span>
               ) : aiStatus.online ? (
-                <span className="text-[11px] text-emerald-400 flex items-center gap-1 font-bold">
+                <span className="text-[11px] text-emerald-600 flex items-center gap-1 font-bold">
                   <CheckCircle2 className="h-3.5 w-3.5" /> Online
                 </span>
               ) : (
-                <span className="text-[11px] text-rose-400 flex items-center gap-1 font-bold">
+                <span className="text-[11px] text-rose-600 flex items-center gap-1 font-bold">
                   <XCircle className="h-3.5 w-3.5" /> Offline
                 </span>
               )}
             </div>
 
-            {/* Mongo & Vector Store */}
-            <div className="bg-[#131A29]/60 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-2xs">
               <div className="flex items-center gap-3">
-                <Database className="h-5 w-5 text-emerald-400" />
+                <Database className="h-5 w-5 text-emerald-600" />
                 <div>
-                  <div className="text-xs font-bold text-white">Database & Vector Store</div>
-                  <div className="text-[11px] text-slate-400 font-mono">MongoDB + RAG Vector Store</div>
+                  <div className="text-xs font-bold text-slate-900">Database & Vector Store</div>
+                  <div className="text-[11px] text-slate-500 font-mono">MongoDB + ChromaDB RAG</div>
                 </div>
               </div>
-              <span className="text-[11px] text-emerald-400 flex items-center gap-1 font-bold">
+              <span className="text-[11px] text-emerald-600 flex items-center gap-1 font-bold">
                 <CheckCircle2 className="h-3.5 w-3.5" /> Active
               </span>
             </div>
           </div>
         </section>
+
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-800 py-6 text-center text-xs text-slate-500">
-        EquityIQ AI Assistant — Indian Stock Market Research Workspace (NSE / BSE)
-      </footer>
+      {/* Slide-over Copilot Drawer */}
+      {showDrawerCopilot && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs">
+          <div className="w-full max-w-lg bg-white h-full shadow-2xl p-6 flex flex-col gap-4 overflow-y-auto animate-slide-in">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-2">
+                <Bot className="h-5 w-5 text-purple-600" />
+                <h3 className="font-bold text-slate-900 text-base">EquityIQ AI Research Assistant</h3>
+              </div>
+              <button
+                onClick={() => setShowDrawerCopilot(false)}
+                className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-xs font-bold rounded-lg text-slate-600"
+              >
+                Close
+              </button>
+            </div>
+            <AIChatCopilotWidget symbol={activeSymbol} />
+          </div>
+        </div>
+      )}
+
+      {/* Floating Bottom-Right AI Assistant Button */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <button
+          onClick={() => setShowDrawerCopilot(!showDrawerCopilot)}
+          className="flex items-center gap-2.5 px-4 py-3 rounded-full bg-purple-600 hover:bg-purple-700 text-white shadow-xl hover:shadow-2xl transition transform hover:-translate-y-0.5 font-bold text-xs border border-purple-500"
+        >
+          <Bot className="h-5 w-5" />
+          <span>Ask AI Assistant</span>
+        </button>
+      </div>
+
     </div>
   );
 }

@@ -8,7 +8,7 @@ const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
 
 const queryRAG = async (req, res, next) => {
   try {
-    const { symbol, query } = req.body;
+    const { symbol, query, selectedDocumentIds } = req.body;
 
     if (!symbol || !symbol.trim()) {
       const error = new Error('Stock symbol parameter is required');
@@ -25,6 +25,18 @@ const queryRAG = async (req, res, next) => {
     }
 
     const cleanSym = symbol.toUpperCase().replace(/\.NS$|\.BO$/i, '').trim();
+
+    // Check document selection restriction
+    if (Array.isArray(selectedDocumentIds) && selectedDocumentIds.length === 0) {
+      return res.status(200).json({
+        symbol: cleanSym,
+        query: query.trim(),
+        synthesized_answer: "Select at least one document to search.",
+        retrieved_chunks: [],
+        total_chunks_searched: 0,
+        confidence_score: 0.0,
+      });
+    }
 
     // 1. Gather Knowledge Base Chunks from MongoDB (News & Reports) & stockService
     const knowledgeBase = [];
@@ -58,15 +70,21 @@ const queryRAG = async (req, res, next) => {
       logger.warn({ err: e.message }, 'News fetch failed for RAG context');
     }
 
-    // Add Processed Report Chunks
+    // Add Processed Report Chunks (filtered by selectedDocumentIds if provided)
     try {
-      const reportList = await Report.find({ companySymbol: cleanSym }).sort({ createdAt: -1 }).limit(2);
+      let reportQuery = { companySymbol: cleanSym };
+      if (Array.isArray(selectedDocumentIds) && selectedDocumentIds.length > 0) {
+        reportQuery._id = { $in: selectedDocumentIds };
+      }
+
+      const reportList = await Report.find(reportQuery).sort({ createdAt: -1 });
       reportList.forEach((r, idx) => {
+        const fileExt = (r.fileName || r.title || '').toLowerCase().endsWith('.csv') ? 'CSV Data' : 'PDF Report';
         knowledgeBase.push({
           id: `report_${idx}_${r._id}`,
-          source_type: 'Annual Report Filing',
-          source_title: r.title,
-          content: `${r.title}: ${r.executiveSummary} Operating Margin ${r.extractedMetrics?.operating_margin || ''}, Net Profit ${r.extractedMetrics?.net_profit || ''}.`,
+          source_type: fileExt,
+          source_title: r.fileName || r.title,
+          content: `${r.title}: ${r.extractedText || r.executiveSummary}. Net Profit ${r.extractedMetrics?.net_profit || 'N/A'}, Operating Margin ${r.extractedMetrics?.operating_margin || 'N/A'}.`,
         });
       });
     } catch (e) {
@@ -82,7 +100,7 @@ const queryRAG = async (req, res, next) => {
           query: query.trim(),
           knowledge_base: knowledgeBase,
         },
-        { timeout: 4000 }
+        { timeout: 5000 }
       );
       return res.status(200).json(response.data);
     } catch (aiErr) {

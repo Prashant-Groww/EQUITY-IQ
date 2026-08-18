@@ -61,6 +61,23 @@ EquityIQ features an automated, rate-limited daily market data pipeline:
 
 ---
 
+## 📑 Unified RAG Research Workspace
+
+EquityIQ features a single, unified 2-column RAG Research Workspace (`RAGWorkspace.jsx`):
+- **Left Side (Document Management)**:
+  - Drag & drop file uploader supporting **PDF (.pdf)** and **CSV (.csv)** ONLY (with client-side extension validation).
+  - Stock selection association with NSE stock universe.
+  - Document status tracking (`✓ Ready`, `184 chunks` for PDF, `125 rows` for CSV, upload date).
+  - Multi-document checkboxes (`☑`) with `Select All` and `Clear All` controls.
+  - Document deletion handler (`DELETE /api/reports/:id`).
+- **Right Side (Ask Your Documents Chat & Search)**:
+  - Grounded RAG conversation thread with empty state prompt suggestions.
+  - Formatted source citations (e.g. `📄 Reliance_Annual_Report.pdf Page 84`, `📊 Reliance_Metrics.csv Rows 12-18`).
+  - Scoped document retrieval respecting selected documents and target stock symbol.
+  - Large input bar supporting `Enter` to send and `Shift+Enter` for line breaks.
+
+---
+
 ## ⚡ Quickstart with Docker Compose
 
 Ensure Docker Desktop is running, then launch all microservices in production mode:

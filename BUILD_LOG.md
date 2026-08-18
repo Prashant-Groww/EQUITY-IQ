@@ -290,6 +290,25 @@ Successfully migrated the entire EquityIQ platform to the **Indian Stock Market 
 - `npm test` (backend) — PASSED (5/5 test suites green, 28/28 integration tests passed).
 - `pytest` (ai-service) — PASSED (12/12 unit tests green in 5.34s).
 
+---
+
+## [2026-08-18] — Unified RAG Research Workspace UI/UX Redesign
+
+### Files Created / Modified
+- `frontend/src/components/RAGWorkspace.jsx`: [NEW] Unified 2-column RAG Research Workspace component integrating Left-side Document Management (stock selection, drag & drop file uploader with PDF & CSV validation, status tracking, multi-document selection checkboxes, Select All / Clear All, delete handler) and Right-side Ask Your Documents RAG Chat (empty state prompt suggestions, conversation history thread, source citations with file page/row references, large input bar supporting Enter to send / Shift+Enter for newline, RAG grounding fallback).
+- `backend/src/controllers/reportController.js`: [MODIFY] Added `deleteReport` controller method to handle document deletion (`DELETE /api/reports/:id`).
+- `backend/src/routes/reportRoutes.js`: [MODIFY] Mounted `DELETE /api/reports/:id` endpoint.
+- `backend/src/controllers/ragController.js`: [MODIFY] Updated `queryRAG` handler to support document ID filtering (`selectedDocumentIds`), scoping context retrieval strictly to selected documents.
+- `frontend/src/App.jsx`: [MODIFY] Replaced old separate RAG tabs with unified `RAGWorkspace`.
+- `frontend/src/components/StockDetailsView.jsx`: [MODIFY] Replaced old separate `ReportProcessingWidget` and `RAGContextWidget` sections with single unified `RAGWorkspace`.
+- `README.md`: [MODIFY] Documented the Unified RAG Research Workspace architecture.
+
+### Verification Commands Run
+- `npm run build` (frontend) — PASSED (Vite production bundle compiled cleanly in 22.06s with 0 errors).
+- `npm test` (backend) — PASSED (5/5 integration test suites green, 28/28 tests passed).
+- `docker compose up --build -d` — Rebuilt and verified all 4 Docker containers (`equityiq-frontend`, `equityiq-backend`, `equityiq-ai-service`, `equityiq-mongo`) are running and healthy.
+
+
 
 
 
