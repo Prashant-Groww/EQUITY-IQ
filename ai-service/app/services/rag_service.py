@@ -4,7 +4,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from loguru import logger
 from app.schemas.rag import RAGQueryRequest, RAGQueryResponse, RetrievedContextChunk, KnowledgeChunk
 
-UNSUPPORTED_FALLBACK_TEXT = "The uploaded documents do not contain enough information to answer this question."
+UNSUPPORTED_FALLBACK_TEXT = "I couldn't find enough information in the selected documents to answer this question."
 
 def generate_default_knowledge_base(symbol: str):
     sym = symbol.upper()
