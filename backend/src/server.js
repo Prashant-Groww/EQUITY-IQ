@@ -3,12 +3,15 @@ const app = require('./app');
 const { connectDB } = require('./config/db');
 const logger = require('./utils/logger');
 
+const { initScheduler, stopScheduler } = require('./services/scheduler');
+
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
     if (process.env.NODE_ENV !== 'test') {
       await connectDB();
+      await initScheduler();
     }
     const server = app.listen(PORT, () => {
       logger.info(`EquityIQ Backend API listening on port ${PORT}`);

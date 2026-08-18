@@ -16,6 +16,8 @@ const portfolioRoutes = require('./routes/portfolioRoutes');
 const alertRoutes = require('./routes/alertRoutes');
 const exportRoutes = require('./routes/exportRoutes');
 
+const adminRoutes = require('./routes/adminRoutes');
+
 const app = express();
 
 // Middleware
@@ -27,6 +29,7 @@ app.use(pinoHttp({ logger }));
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/stocks', stockRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/ml', mlRoutes);
 app.use('/api/ml', ragRoutes);
