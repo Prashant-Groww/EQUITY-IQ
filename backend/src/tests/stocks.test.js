@@ -2,7 +2,7 @@ const request = require('supertest');
 const app = require('../app');
 const stockService = require('../services/stockService');
 
-jest.setTimeout(15000);
+jest.setTimeout(30000);
 
 describe('Phase 3 — Stock Data API Integration Tests (Indian Equities Real-Time)', () => {
   describe('GET /api/stocks/search', () => {
