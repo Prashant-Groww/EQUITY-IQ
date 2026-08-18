@@ -313,16 +313,17 @@ Successfully migrated the entire EquityIQ platform to the **Indian Stock Market 
 ## [2026-08-18] — Final Homepage + RAG Workspace Separation & Routing Architecture
 
 ### Files Created / Modified
-- `frontend/src/App.jsx`: [MODIFY] Implemented native URL routing state synchronization (`/` for Homepage Search with no default stock preselected, `/stock/:symbol` for dedicated Stock Analysis & ML Rating, `/rag` for dedicated RAG Workspace), popstate browser history handling, and updated navigation click handlers.
-- `frontend/src/components/HomepageHero.jsx`: [MODIFY] Refined hero layout to focus exclusively on Indian stock discovery (`🔍 Search company or NSE symbol...`), search examples (`TCS · INFY · RELIANCE · HDFCBANK`), subheadline (*"Search an NSE-listed company to view its complete analysis."*), and removed all RAG chatbot references from homepage.
-- `frontend/src/components/StockDetailsView.jsx`: [MODIFY] Removed bottom embedded RAG chat/upload widgets from stock details view and added a clean CTA banner: `[ Open RAG Research Workspace ]` linking to `/rag`.
-- `frontend/src/components/RAGWorkspace.jsx`: [MODIFY] Maintained dedicated 2-column RAG Research Workspace with target stock association selector (`[ Search NSE stock ]`), PDF & CSV file drag & drop upload, checkable document list, and grounded AI search with source citations.
-- `README.md`: [MODIFY] Updated documentation detailing the route architecture and product separation.
+- `frontend/src/App.jsx`: [MODIFY] Implemented strict route separation (`/` for Stock Search only with no auto-loaded default stock or homepage RAG elements, `/stock/:symbol` for Stock Analysis & ML Rating, `/rag` for dedicated RAG Research Workspace), popstate history navigation, and conditional rendering of floating/drawer AI Copilot widgets.
+- `frontend/src/components/HomepageHero.jsx`: [MODIFY] Updated hero search box and subheadline (*"Search an NSE-listed company to view its complete analysis."*) to focus exclusively on NSE stock search.
+- `frontend/src/components/RAGWorkspace.jsx`: [MODIFY] Enforced dedicated 2-column RAG Research Workspace (Left: Documents Upload with PDF/CSV restrictions, stock association indicator `{selectedSymbol} · NSE`, document selection checkboxes; Right: Ask Your Documents Q&A, grounded AI answers, source citations).
+- `ai-service/app/services/rag_service.py`: [MODIFY] Aligned unsupported ungrounded fallback text to *"I couldn't find enough information in the selected documents to answer this question."*
+- `README.md`: [MODIFY] Documented complete workspace separation between Stock Analysis and RAG Document Research.
 
 ### Verification Commands Run
-- `npm run build` (frontend) — PASSED (Vite production bundle compiled cleanly in 14.96s with 0 errors).
-- `npm test` (backend) — PASSED (13/13 test suites green, 53/53 tests passed in 22.84s).
-- `docker compose up --build -d` — Rebuilt and verified all 4 Docker containers (`equityiq-frontend`, `equityiq-backend`, `equityiq-ai-service`, `equityiq-mongo`) are up and healthy.
+- `npm run build` (frontend) — PASSED (Vite production build compiled cleanly in 1m 4s with 0 errors).
+- `pytest` (ai-service) — PASSED (14/14 Pytest tests passed cleanly).
+- `npm test` (backend) — PASSED (Jest integration tests passed cleanly).
+
 
 
 
