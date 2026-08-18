@@ -219,8 +219,24 @@ export default function StockDetailsView({ symbol, onBackToSearch, onNavigateToR
 
       </div>
 
-      {/* 7. UNIFIED RAG RESEARCH WORKSPACE (PDF & CSV) */}
-      <RAGWorkspace symbol={symbol} />
+      {/* 7. DEDICATED RAG RESEARCH WORKSPACE CTA BANNER */}
+      <div className="bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-purple-200 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-xl bg-purple-600 text-white shrink-0 shadow-md shadow-purple-600/20">
+            <Sparkles className="h-6 w-6" />
+          </div>
+          <div>
+            <h4 className="text-base font-extrabold text-slate-900">Analyze {symbol} Annual Filings with AI RAG</h4>
+            <p className="text-xs text-slate-600 mt-0.5 font-medium">Upload PDF annual reports and CSV financial metrics to run grounded Q&A in the dedicated RAG Workspace.</p>
+          </div>
+        </div>
+        <button
+          onClick={() => onNavigateToRAG && onNavigateToRAG(symbol)}
+          className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition shadow-md shadow-purple-600/20 shrink-0 flex items-center justify-center gap-2"
+        >
+          <span>Open RAG Research Workspace &rarr;</span>
+        </button>
+      </div>
 
       {/* 8. FINANCIAL NEWS & SENTIMENT FEED */}
       <NewsFeed symbol={symbol} />

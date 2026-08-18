@@ -15,12 +15,56 @@ const MARKET_INDICES = [
   { name: 'NIFTY MIDCAP 100', value: '58,210.60', change: '+680.30', percent: '+1.18%', isUp: true },
 ];
 
+const getInitialRouteState = () => {
+  const path = window.location.pathname;
+  const searchParams = new URLSearchParams(window.location.search);
+
+  if (path.startsWith('/stock/')) {
+    const sym = path.replace('/stock/', '').toUpperCase().trim();
+    return { tab: 'STOCK_DETAILS', symbol: sym || 'RELIANCE' };
+  }
+  if (path === '/rag' || path.startsWith('/rag')) {
+    const sym = searchParams.get('symbol') || 'RELIANCE';
+    return { tab: 'RAG', symbol: sym };
+  }
+  return { tab: 'HOMEPAGE', symbol: null };
+};
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState('HOMEPAGE'); // 'HOMEPAGE' | 'STOCK_DETAILS' | 'RAG'
-  const [activeSymbol, setActiveSymbol] = useState('RELIANCE');
+  const initialRoute = getInitialRouteState();
+  const [activeTab, setActiveTab] = useState(initialRoute.tab); // 'HOMEPAGE' | 'STOCK_DETAILS' | 'RAG'
+  const [activeSymbol, setActiveSymbol] = useState(initialRoute.symbol);
   const [backendStatus, setBackendStatus] = useState({ loading: true, online: false });
   const [aiStatus, setAiStatus] = useState({ loading: true, online: false });
   const [showDrawerCopilot, setShowDrawerCopilot] = useState(false);
+
+  const navigateTo = (tab, symbol = null) => {
+    setActiveTab(tab);
+    setActiveSymbol(symbol);
+
+    let newPath = '/';
+    if (tab === 'STOCK_DETAILS' && symbol) {
+      newPath = `/stock/${symbol}`;
+    } else if (tab === 'RAG') {
+      newPath = symbol ? `/rag?symbol=${symbol}` : '/rag';
+    }
+
+    if (window.location.pathname + window.location.search !== newPath) {
+      window.history.pushState({ tab, symbol }, '', newPath);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const route = getInitialRouteState();
+      setActiveTab(route.tab);
+      setActiveSymbol(route.symbol);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const checkHealth = async () => {
     setBackendStatus((prev) => ({ ...prev, loading: true }));
@@ -51,15 +95,11 @@ export default function App() {
   }, []);
 
   const handleSelectSymbol = (symbol) => {
-    setActiveSymbol(symbol);
-    setActiveTab('STOCK_DETAILS');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigateTo('STOCK_DETAILS', symbol);
   };
 
   const handleNavigateToRAG = (symbol) => {
-    if (symbol) setActiveSymbol(symbol);
-    setActiveTab('RAG');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigateTo('RAG', symbol || activeSymbol || 'RELIANCE');
   };
 
   return (
@@ -90,10 +130,7 @@ export default function App() {
           
           {/* Brand Logo */}
           <button 
-            onClick={() => {
-              setActiveTab('HOMEPAGE');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
+            onClick={() => navigateTo('HOMEPAGE')}
             className="flex items-center gap-3 text-left focus:outline-none shrink-0"
           >
             <div className="h-10 w-10 rounded-2xl bg-blue-600 flex items-center justify-center shadow-md shadow-blue-500/20 text-white font-bold">
@@ -120,7 +157,7 @@ export default function App() {
           {/* Main Navigation Links */}
           <nav className="flex items-center gap-1.5">
             <button
-              onClick={() => setActiveTab('HOMEPAGE')}
+              onClick={() => navigateTo('HOMEPAGE')}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
                 activeTab === 'HOMEPAGE'
                   ? 'bg-blue-50 text-blue-700 border border-blue-200'
@@ -133,7 +170,7 @@ export default function App() {
 
             {activeTab === 'STOCK_DETAILS' && (
               <button
-                onClick={() => setActiveTab('STOCK_DETAILS')}
+                onClick={() => navigateTo('STOCK_DETAILS', activeSymbol)}
                 className="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1.5"
               >
                 <Layers className="h-4 w-4" />
@@ -142,7 +179,7 @@ export default function App() {
             )}
 
             <button
-              onClick={() => setActiveTab('RAG')}
+              onClick={() => navigateTo('RAG', activeSymbol)}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
                 activeTab === 'RAG'
                   ? 'bg-purple-50 text-purple-700 border border-purple-200'
@@ -150,7 +187,7 @@ export default function App() {
               }`}
             >
               <Sparkles className="h-4 w-4 text-purple-600" />
-              AI RAG Research
+              RAG Research
             </button>
 
             {/* AI Copilot Drawer Toggle Button */}
@@ -189,7 +226,7 @@ export default function App() {
               
               {/* Feature 1 Card */}
               <div 
-                onClick={() => handleSelectSymbol('RELIANCE')}
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:border-blue-500 hover:shadow-md transition cursor-pointer flex flex-col justify-between gap-4 group"
               >
                 <div className="flex items-center justify-between">
@@ -199,19 +236,19 @@ export default function App() {
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">CORE 1</span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition">NSE Stock Search & Details</h3>
+                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition">NSE Stock Search & Fundamentals</h3>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                     Explore complete market data, 22+ fundamental ratios, and live prices across 500+ Indian equities.
                   </p>
                 </div>
                 <div className="text-xs font-bold text-blue-600 flex items-center gap-1 group-hover:translate-x-1 transition">
-                  Search Stocks &rarr;
+                  Search Equities &rarr;
                 </div>
               </div>
 
               {/* Feature 2 Card */}
               <div 
-                onClick={() => handleSelectSymbol('RELIANCE')}
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:border-emerald-500 hover:shadow-md transition cursor-pointer flex flex-col justify-between gap-4 group"
               >
                 <div className="flex items-center justify-between">
@@ -221,13 +258,13 @@ export default function App() {
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">CORE 2</span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition">ML-Based Stock Rating</h3>
+                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-600 transition">Multi-Factor ML Stock Rating</h3>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Explainable Multi-factor ML ratings, confidence scores, positive/negative drivers, and SHAP matrix.
+                    Explainable Multi-factor ML ratings, confidence scores, positive/negative SHAP drivers for searched stocks.
                   </p>
                 </div>
                 <div className="text-xs font-bold text-emerald-600 flex items-center gap-1 group-hover:translate-x-1 transition">
-                  View ML Rating Engine &rarr;
+                  Explore ML Ratings &rarr;
                 </div>
               </div>
 
@@ -243,13 +280,13 @@ export default function App() {
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">CORE 3</span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-purple-600 transition">RAG Research (PDF & CSV)</h3>
+                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-purple-600 transition">Dedicated RAG Research Workspace</h3>
                   <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Upload financial annual reports (PDF) and structured metrics (CSV) for grounded document Q&A.
+                    Upload annual filings (PDF) and structured metrics (CSV) for grounded document Q&A and citations.
                   </p>
                 </div>
                 <div className="text-xs font-bold text-purple-600 flex items-center gap-1 group-hover:translate-x-1 transition">
-                  Launch RAG Research &rarr;
+                  Launch RAG Workspace &rarr;
                 </div>
               </div>
 

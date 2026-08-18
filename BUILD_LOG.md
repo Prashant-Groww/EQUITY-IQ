@@ -308,6 +308,23 @@ Successfully migrated the entire EquityIQ platform to the **Indian Stock Market 
 - `npm test` (backend) — PASSED (5/5 integration test suites green, 28/28 tests passed).
 - `docker compose up --build -d` — Rebuilt and verified all 4 Docker containers (`equityiq-frontend`, `equityiq-backend`, `equityiq-ai-service`, `equityiq-mongo`) are running and healthy.
 
+---
+
+## [2026-08-18] — Final Homepage + RAG Workspace Separation & Routing Architecture
+
+### Files Created / Modified
+- `frontend/src/App.jsx`: [MODIFY] Implemented native URL routing state synchronization (`/` for Homepage Search with no default stock preselected, `/stock/:symbol` for dedicated Stock Analysis & ML Rating, `/rag` for dedicated RAG Workspace), popstate browser history handling, and updated navigation click handlers.
+- `frontend/src/components/HomepageHero.jsx`: [MODIFY] Refined hero layout to focus exclusively on Indian stock discovery (`🔍 Search company or NSE symbol...`), search examples (`TCS · INFY · RELIANCE · HDFCBANK`), subheadline (*"Search an NSE-listed company to view its complete analysis."*), and removed all RAG chatbot references from homepage.
+- `frontend/src/components/StockDetailsView.jsx`: [MODIFY] Removed bottom embedded RAG chat/upload widgets from stock details view and added a clean CTA banner: `[ Open RAG Research Workspace ]` linking to `/rag`.
+- `frontend/src/components/RAGWorkspace.jsx`: [MODIFY] Maintained dedicated 2-column RAG Research Workspace with target stock association selector (`[ Search NSE stock ]`), PDF & CSV file drag & drop upload, checkable document list, and grounded AI search with source citations.
+- `README.md`: [MODIFY] Updated documentation detailing the route architecture and product separation.
+
+### Verification Commands Run
+- `npm run build` (frontend) — PASSED (Vite production bundle compiled cleanly in 14.96s with 0 errors).
+- `npm test` (backend) — PASSED (13/13 test suites green, 53/53 tests passed in 22.84s).
+- `docker compose up --build -d` — Rebuilt and verified all 4 Docker containers (`equityiq-frontend`, `equityiq-backend`, `equityiq-ai-service`, `equityiq-mongo`) are up and healthy.
+
+
 
 
 

@@ -61,20 +61,18 @@ EquityIQ features an automated, rate-limited daily market data pipeline:
 
 ---
 
-## 📑 Unified RAG Research Workspace
+## 🌐 Product Separation & URL Routing Architecture
 
-EquityIQ features a single, unified 2-column RAG Research Workspace (`RAGWorkspace.jsx`):
-- **Left Side (Document Management)**:
-  - Drag & drop file uploader supporting **PDF (.pdf)** and **CSV (.csv)** ONLY (with client-side extension validation).
-  - Stock selection association with NSE stock universe.
-  - Document status tracking (`✓ Ready`, `184 chunks` for PDF, `125 rows` for CSV, upload date).
-  - Multi-document checkboxes (`☑`) with `Select All` and `Clear All` controls.
-  - Document deletion handler (`DELETE /api/reports/:id`).
-- **Right Side (Ask Your Documents Chat & Search)**:
-  - Grounded RAG conversation thread with empty state prompt suggestions.
-  - Formatted source citations (e.g. `📄 Reliance_Annual_Report.pdf Page 84`, `📊 Reliance_Metrics.csv Rows 12-18`).
-  - Scoped document retrieval respecting selected documents and target stock symbol.
-  - Large input bar supporting `Enter` to send and `Shift+Enter` for line breaks.
+EquityIQ separates Stock Discovery & Analysis from Document AI Research across distinct routes:
+
+- **Homepage (`/`)**:
+  - Focuses strictly on Indian stock discovery with a hero search input (`🔍 Search company or NSE symbol...`), popular search chips (`TCS`, `INFY`, `RELIANCE`, `HDFCBANK`), product overview, and feature highlights.
+  - **No default preselected stock**, **no RAG chatbot**, and **no auto-redirect to `/rag`**.
+- **Stock Analysis (`/stock/:symbol`)**:
+  - Displays full fundamentals for `:symbol` (Company Header, Price & Change %, 22+ Financial Ratios, Price Chart, ML Rating Engine with BUY/SELL recommendation & SHAP drivers, Quantitative Risk Analytics, News Feed).
+  - Includes a link banner: `[ Open RAG Research Workspace ]` navigating to `/rag?symbol=SYMBOL`.
+- **RAG Research Workspace (`/rag`)**:
+  - Dedicated 2-column workspace combining Left-side Document Management (PDF & CSV drag & drop upload, stock-document association `document -> RELIANCE`, document status, checkboxes `☑`, `Select All` / `Clear All`, `Delete`) and Right-side Ask Your Documents search & grounded Q&A with file page/row citations.
 
 ---
 

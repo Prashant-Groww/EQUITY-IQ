@@ -32,18 +32,18 @@ export default function HomepageHero({ onSelectSymbol }) {
         
         {/* Top Feature Pill */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-blue-200 shadow-2xs text-xs font-bold text-blue-700 mb-6 animate-fade-in">
-          <Sparkles className="h-3.5 w-3.5 text-blue-600 animate-pulse" />
-          <span>500+ NSE/BSE Listed Companies Grounded with AI RAG</span>
+          <TrendingUp className="h-3.5 w-3.5 text-blue-600" />
+          <span>500+ NSE Listed Equities & Multi-Factor ML Analytics</span>
         </div>
 
         {/* Primary Hero Headline */}
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.15] mb-5">
-          Search Any Indian Stock with <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">AI Precision</span>
+          Indian Stock Search & <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">ML Rating Engine</span>
         </h1>
 
         {/* Subheadline */}
         <p className="text-base sm:text-lg text-slate-600 max-w-2xl font-normal leading-relaxed mb-8">
-          Instant Quantitative Ratios, Multi-Factor ML Buy/Sell Recommendations, FinBERT News Sentiment, and RAG Annual Filing Retrieval.
+          Search an NSE-listed company to view its complete financial analysis, key ratios, live price charts, FinBERT news sentiment, and ML Buy/Sell rating.
         </p>
 
         {/* Hero Search Box Container */}
