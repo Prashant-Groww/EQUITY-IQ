@@ -17,6 +17,7 @@ import {
   Clock,
   Layers,
   File,
+  Building2,
 } from 'lucide-react';
 import StockSearch from './StockSearch';
 
@@ -27,8 +28,8 @@ const SAMPLE_QUESTIONS = [
   'How did profit change?',
 ];
 
-export default function RAGWorkspace({ symbol: initialSymbol = 'RELIANCE', onSymbolChange }) {
-  const [selectedSymbol, setSelectedSymbol] = useState(initialSymbol);
+export default function RAGWorkspace({ symbol: initialSymbol, onSymbolChange }) {
+  const [selectedSymbol, setSelectedSymbol] = useState(initialSymbol || 'RELIANCE');
   const [documents, setDocuments] = useState([]);
   const [selectedDocIds, setSelectedDocIds] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -324,6 +325,17 @@ export default function RAGWorkspace({ symbol: initialSymbol = 'RELIANCE', onSym
               <span>{errorMessage}</span>
             </div>
           )}
+
+          {/* Target Stock Association Indicator */}
+          <div className="flex items-center justify-between p-3 bg-purple-50/70 border border-purple-200/80 rounded-xl">
+            <div className="flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-purple-600" />
+              <span className="text-xs font-bold text-slate-800">Target Stock Association:</span>
+            </div>
+            <span className="text-xs font-bold text-purple-700 bg-white px-2.5 py-1 rounded-lg border border-purple-200 font-mono shadow-2xs">
+              {selectedSymbol} · NSE
+            </span>
+          </div>
 
           {/* Drag & Drop Upload Zone */}
           <div

@@ -21,11 +21,11 @@ const getInitialRouteState = () => {
 
   if (path.startsWith('/stock/')) {
     const sym = path.replace('/stock/', '').toUpperCase().trim();
-    return { tab: 'STOCK_DETAILS', symbol: sym || 'RELIANCE' };
+    return { tab: 'STOCK_DETAILS', symbol: sym || null };
   }
   if (path === '/rag' || path.startsWith('/rag')) {
-    const sym = searchParams.get('symbol') || 'RELIANCE';
-    return { tab: 'RAG', symbol: sym };
+    const sym = searchParams.get('symbol');
+    return { tab: 'RAG', symbol: sym || null };
   }
   return { tab: 'HOMEPAGE', symbol: null };
 };
@@ -99,7 +99,7 @@ export default function App() {
   };
 
   const handleNavigateToRAG = (symbol) => {
-    navigateTo('RAG', symbol || activeSymbol || 'RELIANCE');
+    navigateTo('RAG', symbol || activeSymbol || null);
   };
 
   return (
@@ -190,14 +190,16 @@ export default function App() {
               RAG Research
             </button>
 
-            {/* AI Copilot Drawer Toggle Button */}
-            <button
-              onClick={() => setShowDrawerCopilot(!showDrawerCopilot)}
-              className="ml-2 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition shadow-sm"
-            >
-              <Bot className="h-4 w-4" />
-              <span className="hidden sm:inline">AI Copilot</span>
-            </button>
+            {/* AI Copilot Drawer Toggle Button (Stock Details & RAG pages only) */}
+            {activeTab !== 'HOMEPAGE' && (
+              <button
+                onClick={() => setShowDrawerCopilot(!showDrawerCopilot)}
+                className="ml-2 flex items-center gap-2 px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition shadow-sm"
+              >
+                <Bot className="h-4 w-4" />
+                <span className="hidden sm:inline">AI Copilot</span>
+              </button>
+            )}
 
             {/* User Profile Pill */}
             <div className="hidden sm:flex items-center gap-2 ml-2 pl-2 border-l border-slate-200">
@@ -387,7 +389,7 @@ export default function App() {
       </main>
 
       {/* Slide-over Copilot Drawer */}
-      {showDrawerCopilot && (
+      {activeTab !== 'HOMEPAGE' && showDrawerCopilot && (
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs">
           <div className="w-full max-w-lg bg-white h-full shadow-2xl p-6 flex flex-col gap-4 overflow-y-auto animate-slide-in">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
@@ -408,15 +410,17 @@ export default function App() {
       )}
 
       {/* Floating Bottom-Right AI Assistant Button */}
-      <div className="fixed bottom-6 right-6 z-40">
-        <button
-          onClick={() => setShowDrawerCopilot(!showDrawerCopilot)}
-          className="flex items-center gap-2.5 px-4 py-3 rounded-full bg-purple-600 hover:bg-purple-700 text-white shadow-xl hover:shadow-2xl transition transform hover:-translate-y-0.5 font-bold text-xs border border-purple-500"
-        >
-          <Bot className="h-5 w-5" />
-          <span>Ask AI Assistant</span>
-        </button>
-      </div>
+      {activeTab !== 'HOMEPAGE' && (
+        <div className="fixed bottom-6 right-6 z-40">
+          <button
+            onClick={() => setShowDrawerCopilot(!showDrawerCopilot)}
+            className="flex items-center gap-2.5 px-4 py-3 rounded-full bg-purple-600 hover:bg-purple-700 text-white shadow-xl hover:shadow-2xl transition transform hover:-translate-y-0.5 font-bold text-xs border border-purple-500"
+          >
+            <Bot className="h-5 w-5" />
+            <span>Ask AI Assistant</span>
+          </button>
+        </div>
+      )}
 
     </div>
   );

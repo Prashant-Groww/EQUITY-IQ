@@ -43,7 +43,7 @@ export default function HomepageHero({ onSelectSymbol }) {
 
         {/* Subheadline */}
         <p className="text-base sm:text-lg text-slate-600 max-w-2xl font-normal leading-relaxed mb-8">
-          Search an NSE-listed company to view its complete financial analysis, key ratios, live price charts, FinBERT news sentiment, and ML Buy/Sell rating.
+          Search an NSE-listed company to view its complete analysis.
         </p>
 
         {/* Hero Search Box Container */}
