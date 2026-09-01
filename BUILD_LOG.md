@@ -406,6 +406,10 @@ Resolved navbar search dropdown layout clipping, implemented a multi-tier releva
 - **Frontend Build**: `npm run build` (Vite v5.4.21) completed cleanly with 0 errors.
 - **Backend Test Suite**: `stocks.test.js` passed all 7 tests.
 - **MongoDB Seeder**: `seedStocks.js` successfully seeded/updated 353 NSE stocks.
+- **Docker Compose Rebuild & Health Check**:
+  - `docker compose up --build -d` rebuilt all images (`equity-iq-backend:latest`, `equity-iq-frontend:latest`, `equity-iq-ai-service:latest`, `mongo:7.0`).
+  - All 4 containers started and passed health checks (`equityiq-mongo`, `equityiq-backend`, `equityiq-ai-service`, `equityiq-frontend`).
+  - Verified live endpoints: `http://localhost:3000/` (HTTP 200), `http://localhost:5000/api/health` (HTTP 200), `http://localhost:8000/health` (HTTP 200), `http://localhost:5000/api/stocks/search?q=ELECO` (Rank #1: `ELECON`), `http://localhost:8000/predict/sentiment` (Positive sentiment prediction).
 
 
 
