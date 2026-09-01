@@ -29,7 +29,7 @@ const SAMPLE_QUESTIONS = [
 ];
 
 export default function RAGWorkspace({ symbol: initialSymbol, onSymbolChange }) {
-  const [selectedSymbol, setSelectedSymbol] = useState(initialSymbol || 'RELIANCE');
+  const [selectedSymbol, setSelectedSymbol] = useState(initialSymbol || '');
   const [documents, setDocuments] = useState([]);
   const [selectedDocIds, setSelectedDocIds] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -52,6 +52,11 @@ export default function RAGWorkspace({ symbol: initialSymbol, onSymbolChange }) 
 
   // Fetch uploaded documents for active stock
   const fetchDocuments = useCallback(async () => {
+    if (!selectedSymbol) {
+      setDocuments([]);
+      setSelectedDocIds([]);
+      return;
+    }
     try {
       const res = await fetch(`/api/reports/${selectedSymbol}`);
       if (res.ok) {
@@ -85,6 +90,11 @@ export default function RAGWorkspace({ symbol: initialSymbol, onSymbolChange }) 
   // Upload file validation and pipeline execution
   const processFileUpload = async (file) => {
     if (!file) return;
+
+    if (!selectedSymbol) {
+      setErrorMessage('Please select a stock to associate this document before uploading.');
+      return;
+    }
 
     const fileName = file.name;
     const ext = fileName.slice(((fileName.lastIndexOf('.') - 1) >>> 0) + 2).toLowerCase();
@@ -409,8 +419,17 @@ export default function RAGWorkspace({ symbol: initialSymbol, onSymbolChange }) 
             {documents.length === 0 ? (
               <div className="p-6 bg-slate-50 border border-slate-200 rounded-xl text-center text-slate-500 text-xs font-medium flex flex-col items-center gap-1">
                 <File className="h-6 w-6 text-slate-400 mb-1" />
-                <span>No documents uploaded yet for {selectedSymbol}.</span>
-                <span className="text-[11px] text-slate-400">Upload a PDF annual report or CSV financial metrics file above.</span>
+                {selectedSymbol ? (
+                  <>
+                    <span>No documents uploaded yet for <strong>{selectedSymbol}</strong>.</span>
+                    <span className="text-[11px] text-slate-400">Upload a PDF annual report or CSV financial metrics file above.</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="font-semibold text-slate-600">No stock selected.</span>
+                    <span className="text-[11px] text-slate-400">Search and select a stock above to upload and manage its documents.</span>
+                  </>
+                )}
               </div>
             ) : (
               <div className="flex flex-col gap-2.5 max-h-80 overflow-y-auto pr-1">
@@ -525,7 +544,9 @@ export default function RAGWorkspace({ symbol: initialSymbol, onSymbolChange }) 
                 <div>
                   <h4 className="text-base font-extrabold text-slate-900">Ask your documents</h4>
                   <p className="text-xs text-slate-500 mt-1 max-w-sm leading-relaxed font-medium">
-                    Get answers grounded in your uploaded financial reports and datasets for {selectedSymbol}.
+                    {selectedSymbol
+                      ? `Get answers grounded in your uploaded financial reports and datasets for ${selectedSymbol}.`
+                      : 'Select a stock and upload documents on the left to start asking questions.'}
                   </p>
                 </div>
 
