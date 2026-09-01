@@ -15,6 +15,15 @@ describe('Phase 3 — Stock Data API Integration Tests (Indian Equities Real-Tim
       expect(res.body[0]).toHaveProperty('companyName');
     });
 
+    it('should prioritize symbol prefix matches over sector matches for query ELECO', async () => {
+      const res = await request(app).get('/api/stocks/search?q=ELECO');
+      expect(res.statusCode).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.length).toBeGreaterThan(0);
+      expect(res.body[0].symbol).toBe('ELECON');
+      expect(res.body[0].matchType).toBe('symbol_prefix');
+    });
+
     it('should return 400 Bad Request when search query is missing', async () => {
       const res = await request(app).get('/api/stocks/search?q=');
       expect(res.statusCode).toBe(400);
