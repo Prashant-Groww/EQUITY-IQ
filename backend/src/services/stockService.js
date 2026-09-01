@@ -37,6 +37,77 @@ const parseSymbol = (input) => {
   return { clean, nse: `${clean}.NS` };
 };
 
+// Helper to calculate relevance score for search results
+const calculateStockMatchScore = (stock, queryUpper, queryLower) => {
+  const symbol = (stock.symbol || '').toUpperCase();
+  const companyName = (stock.companyName || '').toLowerCase();
+  const sector = (stock.sector || '').toLowerCase();
+  const industry = (stock.industry || '').toLowerCase();
+
+  let score = 0;
+  let matchType = 'other';
+
+  // 1. Exact Symbol Match (Highest priority)
+  if (symbol === queryUpper) {
+    score = 1000;
+    matchType = 'symbol_exact';
+  }
+  // 2. Symbol Starts With Query (e.g. ELECON for ELEC)
+  else if (symbol.startsWith(queryUpper)) {
+    score = 800;
+    matchType = 'symbol_prefix';
+  }
+  // 3. Symbol Contains Query (e.g. ORIENTELEC for ELEC)
+  else if (symbol.includes(queryUpper)) {
+    score = 500;
+    matchType = 'symbol_match';
+  }
+  // 4. Company Name Starts With Query
+  else if (companyName.startsWith(queryLower)) {
+    score = 400;
+    matchType = 'name_prefix';
+  }
+  // 5. Word in Company Name Starts With Query (e.g. "Bharat Heavy Electricals" for "ELEC")
+  else if (companyName.split(/\s+/).some((w) => w.startsWith(queryLower))) {
+    score = 300;
+    matchType = 'name_word_match';
+  }
+  // 6. Company Name Contains Query
+  else if (companyName.includes(queryLower)) {
+    score = 200;
+    matchType = 'name_match';
+  }
+  // 7. Sector Starts With Query (e.g. TELECOM for TELECOM)
+  else if (sector.startsWith(queryLower)) {
+    score = 120;
+    matchType = 'sector_prefix';
+  }
+  // 8. Industry Starts With Query
+  else if (industry.startsWith(queryLower)) {
+    score = 100;
+    matchType = 'industry_prefix';
+  }
+  // 9. Sector Contains Substring (e.g. ELECO inside Telecommunications)
+  else if (sector.includes(queryLower)) {
+    score = 50;
+    matchType = 'sector_match';
+  }
+  // 10. Industry Contains Substring
+  else if (industry.includes(queryLower)) {
+    score = 40;
+    matchType = 'industry_match';
+  }
+
+  // Market cap weighting bonus (only if there was a genuine match)
+  if (score > 0) {
+    const mCapCr = stock.marketCap || 0;
+    const mCapBonus = Math.min(25, (mCapCr / 100000) * 5);
+    score += mCapBonus;
+  }
+
+  return { score, matchType };
+};
+
 // 1. Search Stock Symbols Across 500+ NSE Listed Companies
 const searchStocks = async (query) => {
   if (!query || query.trim().length === 0) return [];
@@ -50,9 +121,32 @@ const searchStocks = async (query) => {
     return cached;
   }
 
-  let results = [];
+  const matchesMap = new Map();
 
-  // Try MongoDB Search first
+  // 1. Search in in-memory stock universe first (instant & comprehensive 500+ NSE universe)
+  INDIAN_STOCKS_UNIVERSE.forEach((item) => {
+    const { score, matchType } = calculateStockMatchScore(item, q, qLower);
+    if (score > 0) {
+      matchesMap.set(item.symbol, {
+        symbol: item.symbol,
+        companyName: item.companyName,
+        exchange: 'NSE',
+        currency: 'INR',
+        sector: item.sector,
+        industry: item.industry,
+        marketCapCategory: item.marketCapCategory,
+        marketCap: item.marketCap,
+        price: item.price,
+        peRatio: item.peRatio,
+        bookValue: item.bookValue || (item.price && item.pbRatio ? Number((item.price / item.pbRatio).toFixed(2)) : null),
+        lastUpdated: new Date().toISOString(),
+        score,
+        matchType,
+      });
+    }
+  });
+
+  // 2. Query MongoDB for any additional or updated stock docs
   try {
     const mongoDocs = await Stock.find({
       $or: [
@@ -61,58 +155,47 @@ const searchStocks = async (query) => {
         { sector: { $regex: qLower, $options: 'i' } },
         { industry: { $regex: qLower, $options: 'i' } },
       ],
-    }).limit(20).lean();
+    }).limit(40).lean();
 
     if (mongoDocs && mongoDocs.length > 0) {
-      results = mongoDocs.map((doc) => ({
-        symbol: doc.symbol,
-        companyName: doc.companyName,
-        exchange: 'NSE',
-        currency: 'INR',
-        sector: doc.sector,
-        industry: doc.industry,
-        marketCapCategory: doc.marketCapCategory,
-        price: doc.price,
-        peRatio: doc.peRatio,
-        lastUpdated: doc.lastUpdated || doc.updatedAt || new Date().toISOString(),
-      }));
+      mongoDocs.forEach((doc) => {
+        const { score, matchType } = calculateStockMatchScore(doc, q, qLower);
+        if (score > 0) {
+          const existing = matchesMap.get(doc.symbol);
+          matchesMap.set(doc.symbol, {
+            symbol: doc.symbol,
+            companyName: doc.companyName || existing?.companyName || `${doc.symbol} Limited`,
+            exchange: 'NSE',
+            currency: 'INR',
+            sector: doc.sector || existing?.sector || 'Equities',
+            industry: doc.industry || existing?.industry || 'Diversified',
+            marketCapCategory: doc.marketCapCategory || existing?.marketCapCategory || 'Large Cap',
+            marketCap: doc.marketCap || existing?.marketCap || null,
+            price: doc.price ?? existing?.price ?? null,
+            peRatio: doc.peRatio ?? existing?.peRatio ?? null,
+            bookValue: doc.bookValue || existing?.bookValue || null,
+            lastUpdated: doc.lastUpdated || doc.updatedAt || new Date().toISOString(),
+            score: Math.max(score, existing?.score || 0),
+            matchType: existing?.matchType || matchType,
+          });
+        }
+      });
     }
   } catch (mongoErr) {
     logger.warn({ err: mongoErr.message }, 'MongoDB stock search query failed, using in-memory stock universe');
   }
 
-  // In-memory fallback if MongoDB returned no results or is unavailable
-  if (results.length === 0) {
-    results = INDIAN_STOCKS_UNIVERSE.filter((s) =>
-      s.symbol.includes(q) ||
-      s.companyName.toLowerCase().includes(qLower) ||
-      s.sector.toLowerCase().includes(qLower) ||
-      s.industry.toLowerCase().includes(qLower)
-    ).slice(0, 20).map((item) => ({
-      symbol: item.symbol,
-      companyName: item.companyName,
-      exchange: 'NSE',
-      currency: 'INR',
-      sector: item.sector,
-      industry: item.industry,
-      marketCapCategory: item.marketCapCategory,
-      price: item.price,
-      peRatio: item.peRatio,
-      lastUpdated: new Date().toISOString(),
-    }));
-  }
-
-  // Attempt Yahoo Finance search augment if needed
+  // 3. Attempt Yahoo Finance search augment if needed
   try {
     const url = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(q)}&quotesCount=10&newsCount=0`;
     const res = await axios.get(url, { headers: AXIOS_HEADERS, timeout: 2000 });
     if (res.data && res.data.quotes && Array.isArray(res.data.quotes)) {
-      const yahooMatches = res.data.quotes
+      res.data.quotes
         .filter((item) => item.symbol && (item.symbol.endsWith('.NS') || item.symbol.endsWith('.BO') || item.exchDisp === 'NSE'))
-        .map((item) => {
+        .forEach((item) => {
           const { clean } = parseSymbol(item.symbol);
           const stockInfo = STOCKS_MAP[clean] || {};
-          return {
+          const candidate = {
             symbol: clean,
             companyName: item.longname || item.shortname || stockInfo.companyName || `${clean} Limited`,
             exchange: 'NSE',
@@ -120,27 +203,31 @@ const searchStocks = async (query) => {
             sector: stockInfo.sector || 'Equities',
             industry: stockInfo.industry || 'Diversified',
             marketCapCategory: stockInfo.marketCapCategory || 'Large Cap',
+            marketCap: stockInfo.marketCap || null,
             price: stockInfo.price || null,
             peRatio: stockInfo.peRatio || null,
             lastUpdated: new Date().toISOString(),
           };
+          const { score, matchType } = calculateStockMatchScore(candidate, q, qLower);
+          if (!matchesMap.has(clean)) {
+            matchesMap.set(clean, { ...candidate, score: score || 50, matchType });
+          }
         });
-
-      const seen = new Set(results.map((r) => r.symbol));
-      yahooMatches.forEach((ym) => {
-        if (!seen.has(ym.symbol)) {
-          seen.add(ym.symbol);
-          results.push(ym);
-        }
-      });
     }
   } catch (err) {
     logger.warn({ err: err.message }, `External Yahoo search failed for '${q}'`);
   }
 
-  const finalResults = results.slice(0, 20);
-  stockCache.set(cacheKey, finalResults, 600);
-  return finalResults;
+  // Sort by score descending, then by marketCap descending
+  const sortedResults = Array.from(matchesMap.values())
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return (b.marketCap || 0) - (a.marketCap || 0);
+    })
+    .slice(0, 20);
+
+  stockCache.set(cacheKey, sortedResults, 600);
+  return sortedResults;
 };
 
 const formatISTDate = (dateInput) => {
@@ -258,7 +345,7 @@ const getStockQuote = async (symbolInput) => {
     peRatio: stockMaster.peRatio || null,
     pbRatio: stockMaster.pbRatio || null,
     eps: stockMaster.eps || null,
-    bookValue: stockMaster.bookValue || null,
+    bookValue: stockMaster.bookValue || (price && stockMaster.pbRatio ? Number((price / stockMaster.pbRatio).toFixed(2)) : null),
     roe: stockMaster.roe || null,
     roce: stockMaster.roce || null,
     debtToEquity: stockMaster.debtToEquity || null,
@@ -366,7 +453,7 @@ const getStockFinancials = async (symbolInput) => {
     marketCap: quote.marketCap ?? mock.marketCap ?? null,
     peRatio: quote.peRatio ?? mock.peRatio ?? null,
     pbRatio: quote.pbRatio ?? mock.pbRatio ?? null,
-    bookValue: quote.bookValue ?? mock.bookValue ?? null,
+    bookValue: quote.bookValue ?? mock.bookValue ?? (quote.price && quote.pbRatio ? Number((quote.price / quote.pbRatio).toFixed(2)) : null),
     eps: quote.eps ?? mock.eps ?? null,
     roe: quote.roe ?? mock.roe ?? null,
     roce: quote.roce ?? mock.roce ?? null,
