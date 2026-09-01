@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import { TrendingUp, TrendingDown, Activity, Building2, Clock } from 'lucide-react';
-import { formatINR, formatIndianNumber } from '../utils/formatters';
+import { formatINR, formatMarketCap, formatVolume } from '../utils/formatters';
 
 const TIME_RANGES = ['1D', '1W', '1M', '1Y', '5Y'];
 
@@ -125,12 +125,12 @@ export default function StockChart({ symbol }) {
         <div className="flex flex-col gap-0.5">
           <span className="text-slate-500 text-[11px]">Volume</span>
           <span className="font-bold text-blue-700 font-mono">
-            {(quote?.volume || 0).toLocaleString('en-IN')}
+            {formatVolume(quote?.volume)}
           </span>
         </div>
         <div className="flex flex-col gap-0.5">
           <span className="text-slate-500 text-[11px]">Market Cap</span>
-          <span className="font-bold text-indigo-700 font-mono">{formatIndianNumber(quote?.marketCap)}</span>
+          <span className="font-bold text-indigo-700 font-mono">{formatMarketCap(quote?.marketCap)}</span>
         </div>
         <div className="flex flex-col gap-0.5">
           <span className="text-slate-500 text-[11px]">P/E Ratio</span>

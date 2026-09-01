@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { DollarSign, PieChart, TrendingUp, BarChart3, ArrowUpRight, Percent, BookOpen, Activity, Scale, CheckCircle2 } from 'lucide-react';
-import { formatINR, formatIndianNumber } from '../utils/formatters';
+import { formatINR, formatMarketCap, formatVolume } from '../utils/formatters';
 
 export default function FinancialMetrics({ symbol }) {
   const [financials, setFinancials] = useState(null);
@@ -35,10 +35,16 @@ export default function FinancialMetrics({ symbol }) {
     );
   }
 
+  const derivedBookValue = financials?.bookValue != null
+    ? financials.bookValue
+    : (financials?.price && financials?.pbRatio && financials.pbRatio > 0)
+      ? (financials.price / financials.pbRatio)
+      : null;
+
   const metricsList = [
     {
       title: 'Market Cap',
-      value: financials?.marketCap != null ? formatIndianNumber(financials.marketCap) : 'Data unavailable',
+      value: financials?.marketCap != null ? formatMarketCap(financials.marketCap) : 'Data unavailable',
       subtitle: financials?.marketCapCategory || 'NSE Market Cap',
       icon: DollarSign,
       color: 'text-blue-600',
@@ -62,7 +68,7 @@ export default function FinancialMetrics({ symbol }) {
     },
     {
       title: 'Book Value',
-      value: financials?.bookValue != null ? formatINR(financials.bookValue) : 'Data unavailable',
+      value: derivedBookValue != null ? formatINR(derivedBookValue) : 'Data unavailable',
       subtitle: 'Per Share Net Asset',
       icon: Scale,
       color: 'text-slate-700',
@@ -120,7 +126,7 @@ export default function FinancialMetrics({ symbol }) {
     },
     {
       title: 'Volume',
-      value: financials?.volume != null ? formatIndianNumber(financials.volume) : 'Data unavailable',
+      value: financials?.volume != null ? formatVolume(financials.volume) : 'Data unavailable',
       subtitle: 'Daily Traded Shares',
       icon: BarChart3,
       color: 'text-blue-700',

@@ -4,7 +4,6 @@ import StockChart from './StockChart';
 import FinancialMetrics from './FinancialMetrics';
 import MLRatingWidget from './MLRatingWidget';
 import RiskAnalyticsWidget from './RiskAnalyticsWidget';
-import RAGWorkspace from './RAGWorkspace';
 import NewsFeed from './NewsFeed';
 import { formatINR } from '../utils/formatters';
 
@@ -158,7 +157,15 @@ export default function StockDetailsView({ symbol, onBackToSearch, onNavigateToR
             </div>
             <div>
               <span className="text-slate-400 block text-[10px]">Book Value</span>
-              <span className="font-bold text-slate-900">{financials?.bookValue != null ? `₹${financials.bookValue}` : 'Data unavailable'}</span>
+              <span className="font-bold text-slate-900">
+                {financials?.bookValue != null
+                  ? formatINR(financials.bookValue)
+                  : (financials?.price && financials?.pbRatio && financials.pbRatio > 0)
+                    ? formatINR(financials.price / financials.pbRatio)
+                    : (quote?.price && financials?.pbRatio && financials.pbRatio > 0)
+                      ? formatINR(quote.price / financials.pbRatio)
+                      : 'Data unavailable'}
+              </span>
             </div>
             <div>
               <span className="text-slate-400 block text-[10px]">Delivery Volume %</span>
