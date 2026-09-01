@@ -148,7 +148,7 @@ export default function App() {
           </button>
 
           {/* Compact Navbar Search Box (visible on Stock Details & non-hero pages) */}
-          <div className="flex-1 max-w-md hidden md:block">
+          <div className="flex-1 min-w-[240px] max-w-sm lg:max-w-md hidden md:block">
             {activeTab !== 'HOMEPAGE' && (
               <StockSearch onSelectSymbol={handleSelectSymbol} activeSymbol={activeSymbol} variant="default" />
             )}

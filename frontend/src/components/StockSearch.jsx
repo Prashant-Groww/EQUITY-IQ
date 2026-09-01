@@ -1,21 +1,47 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, TrendingUp, Building2, Clock, X, Sparkles } from 'lucide-react';
+import { Search, TrendingUp, Building2, Clock, X, Sparkles, Tag } from 'lucide-react';
+import { formatINR } from '../utils/formatters';
 
 const POPULAR_INDIAN_STOCKS = [
-  { symbol: 'RELIANCE', companyName: 'Reliance Industries Ltd', sector: 'Oil & Gas', exchange: 'NSE' },
-  { symbol: 'TCS', companyName: 'Tata Consultancy Services Ltd', sector: 'IT Services', exchange: 'NSE' },
-  { symbol: 'INFY', companyName: 'Infosys Ltd', sector: 'IT Services', exchange: 'NSE' },
-  { symbol: 'HDFCBANK', companyName: 'HDFC Bank Ltd', sector: 'Banking', exchange: 'NSE' },
-  { symbol: 'ICICIBANK', companyName: 'ICICI Bank Ltd', sector: 'Banking', exchange: 'NSE' },
-  { symbol: 'SBIN', companyName: 'State Bank of India', sector: 'Banking', exchange: 'NSE' },
-  { symbol: 'TATAMOTORS', companyName: 'Tata Motors Ltd', sector: 'Automobiles', exchange: 'NSE' },
-  { symbol: 'LT', companyName: 'Larsen & Toubro Ltd', sector: 'Infrastructure', exchange: 'NSE' },
-  { symbol: 'BHARTIARTL', companyName: 'Bharti Airtel Ltd', sector: 'Telecom', exchange: 'NSE' },
-  { symbol: 'ITC', companyName: 'ITC Ltd', sector: 'FMCG', exchange: 'NSE' },
+  { symbol: 'RELIANCE', companyName: 'Reliance Industries Limited', sector: 'Oil & Gas', price: 1296.30, exchange: 'NSE' },
+  { symbol: 'TCS', companyName: 'Tata Consultancy Services Limited', sector: 'IT Services', price: 2445.90, exchange: 'NSE' },
+  { symbol: 'INFY', companyName: 'Infosys Limited', sector: 'IT Services', price: 1160.00, exchange: 'NSE' },
+  { symbol: 'HDFCBANK', companyName: 'HDFC Bank Limited', sector: 'Banking', price: 740.55, exchange: 'NSE' },
+  { symbol: 'ICICIBANK', companyName: 'ICICI Bank Limited', sector: 'Banking', price: 1441.30, exchange: 'NSE' },
+  { symbol: 'SBIN', companyName: 'State Bank of India', sector: 'Banking', price: 840.00, exchange: 'NSE' },
+  { symbol: 'BHARTIARTL', companyName: 'Bharti Airtel Limited', sector: 'Telecommunications', price: 1625.40, exchange: 'NSE' },
+  { symbol: 'TATAMOTORS', companyName: 'Tata Motors Limited', sector: 'Automobiles', price: 1015.00, exchange: 'NSE' },
+  { symbol: 'ELECON', companyName: 'Elecon Engineering Company Limited', sector: 'Capital Goods', price: 625.40, exchange: 'NSE' },
+  { symbol: 'LT', companyName: 'Larsen & Toubro Limited', sector: 'Infrastructure', price: 3680.00, exchange: 'NSE' },
+  { symbol: 'ITC', companyName: 'ITC Limited', sector: 'FMCG', price: 472.10, exchange: 'NSE' },
+  { symbol: 'BHEL', companyName: 'Bharat Heavy Electricals Limited', sector: 'Capital Goods', price: 265.40, exchange: 'NSE' },
 ];
 
+/**
+ * Text Highlighter Component for highlighting matched search queries
+ */
+function HighlightMatch({ text, query }) {
+  if (!text) return null;
+  if (!query || !query.trim()) return <span>{text}</span>;
+
+  const parts = text.split(new RegExp(`(${query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
+  return (
+    <span>
+      {parts.map((part, i) =>
+        part.toLowerCase() === query.trim().toLowerCase() ? (
+          <span key={i} className="text-blue-600 font-bold bg-blue-50/80 px-0.5 rounded">
+            {part}
+          </span>
+        ) : (
+          part
+        )
+      )}
+    </span>
+  );
+}
+
 export default function StockSearch({ onSelectSymbol, activeSymbol, placeholder, variant = 'default' }) {
-  const [query, setQuery] = useState(activeSymbol || '');
+  const [query, setQuery] = useState(variant === 'hero' ? '' : (activeSymbol || ''));
   const [suggestions, setSuggestions] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -38,9 +64,9 @@ export default function StockSearch({ onSelectSymbol, activeSymbol, placeholder,
     }
   }, []);
 
-  // Sync activeSymbol if changed externally
+  // Sync activeSymbol if changed externally (navbar search only, not hero)
   useEffect(() => {
-    if (activeSymbol && activeSymbol !== query) {
+    if (!isHero && activeSymbol && activeSymbol !== query) {
       setQuery(activeSymbol);
     }
   }, [activeSymbol]);
@@ -61,14 +87,15 @@ export default function StockSearch({ onSelectSymbol, activeSymbol, placeholder,
           if (Array.isArray(data) && data.length > 0) {
             setSuggestions(data);
           } else {
-            setSuggestions(
-              POPULAR_INDIAN_STOCKS.filter(
-                (s) =>
-                  s.symbol.includes(query.toUpperCase()) ||
-                  s.companyName.toUpperCase().includes(query.toUpperCase()) ||
-                  (s.sector && s.sector.toUpperCase().includes(query.toUpperCase()))
-              )
+            const qU = query.toUpperCase().trim();
+            const qL = query.toLowerCase().trim();
+            const localMatches = POPULAR_INDIAN_STOCKS.filter(
+              (s) =>
+                s.symbol.includes(qU) ||
+                s.companyName.toLowerCase().includes(qL) ||
+                (s.sector && s.sector.toLowerCase().includes(qL))
             );
+            setSuggestions(localMatches);
           }
         }
       } catch (err) {
@@ -187,11 +214,13 @@ export default function StockSearch({ onSelectSymbol, activeSymbol, placeholder,
         </span>
       </div>
 
-      {/* Autocomplete Suggestions Menu */}
+      {/* Autocomplete Suggestions Menu with generous width to prevent clipping */}
       {isOpen && (
         <div
-          className={`absolute left-0 right-0 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 max-h-96 overflow-y-auto divide-y divide-slate-100 ${
-            isHero ? 'top-full mt-3' : 'top-full mt-2'
+          className={`absolute bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 max-h-[420px] overflow-y-auto divide-y divide-slate-100 ${
+            isHero
+              ? 'left-0 right-0 top-full mt-3'
+              : 'left-0 sm:left-auto sm:right-0 md:left-0 top-full mt-2 w-[440px] sm:w-[480px] md:w-[520px] max-w-[92vw]'
           }`}
         >
           {/* Recent Searches */}
@@ -216,10 +245,15 @@ export default function StockSearch({ onSelectSymbol, activeSymbol, placeholder,
           )}
 
           {/* Section Header */}
-          <div className="px-4 py-2.5 bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
-            <span>500+ NSE Listed Companies</span>
+          <div className="px-4 py-2.5 bg-slate-50/90 backdrop-blur-xs text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <Building2 className="h-3.5 w-3.5 text-blue-600" />
+              {query.trim() ? 'Search Results' : '500+ NSE Listed Companies'}
+            </span>
             {loading ? (
-              <span className="text-blue-600 animate-pulse font-semibold">Searching...</span>
+              <span className="text-blue-600 animate-pulse font-semibold flex items-center gap-1">
+                <Sparkles className="h-3 w-3 animate-spin" /> Searching...
+              </span>
             ) : (
               <span className="text-slate-400 font-normal">{suggestions.length} results</span>
             )}
@@ -227,49 +261,61 @@ export default function StockSearch({ onSelectSymbol, activeSymbol, placeholder,
 
           {/* Suggestions List */}
           {suggestions.length === 0 ? (
-            <div className="px-4 py-6 text-xs text-slate-500 text-center">
-              No matching Indian companies found for "{query}"
+            <div className="px-4 py-8 text-xs text-slate-500 text-center">
+              <p className="font-semibold text-slate-700 mb-1">No matching Indian companies found</p>
+              <p className="text-slate-400">Try searching with a different symbol, name, or sector (e.g. RELIANCE, TCS, Banking)</p>
             </div>
           ) : (
             <div className="py-1">
               {suggestions.map((item, idx) => {
                 const isSelected = idx === selectedIndex;
                 const initials = item.symbol ? item.symbol.slice(0, 2) : 'EQ';
+                const isSectorMatch = item.matchType === 'sector_match' || item.matchType === 'industry_match';
                 return (
                   <button
                     key={item.symbol}
                     onClick={() => handleSelect(item.symbol)}
-                    className={`w-full text-left px-4 py-3 transition flex items-center justify-between group ${
-                      isSelected ? 'bg-blue-50/80 text-blue-900' : 'hover:bg-slate-50 text-slate-800'
+                    className={`w-full text-left px-4 py-3 transition flex items-center justify-between gap-3 group border-l-2 ${
+                      isSelected
+                        ? 'bg-blue-50/80 text-blue-900 border-blue-600'
+                        : 'hover:bg-slate-50/90 text-slate-800 border-transparent'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-xl bg-blue-100/70 border border-blue-200 text-blue-700 font-bold text-xs flex items-center justify-center shrink-0">
+                    {/* Left: Avatar, Symbol & Details */}
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-100/80 border border-blue-200 text-blue-700 font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
                         {initials}
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition">
-                            {item.symbol}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition tracking-tight">
+                            <HighlightMatch text={item.symbol} query={query} />
                           </span>
                           {item.sector && (
-                            <span className="text-[10px] bg-slate-100 text-slate-600 border border-slate-200 px-1.5 py-0.5 rounded-full font-medium">
-                              {item.sector}
+                            <span className="text-[10px] bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full font-medium shrink-0">
+                              <HighlightMatch text={item.sector} query={query} />
+                            </span>
+                          )}
+                          {isSectorMatch && (
+                            <span className="text-[9px] bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded font-semibold shrink-0 flex items-center gap-1">
+                              <Tag className="h-2.5 w-2.5" /> Sector Match
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-slate-500 truncate max-w-[280px]">
-                          {item.companyName}
+                        <div className="text-xs text-slate-500 truncate max-w-[240px] sm:max-w-[290px] mt-0.5">
+                          <HighlightMatch text={item.companyName} query={query} />
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 text-right">
-                      {item.price && (
-                        <div className="text-xs font-bold text-slate-900">
-                          ₹{item.price.toLocaleString('en-IN')}
+
+                    {/* Right: Formatted Price & NSE Badge (shrink-0 ensures no clipping) */}
+                    <div className="flex items-center gap-2.5 text-right shrink-0">
+                      {item.price != null && item.price > 0 && (
+                        <div className="text-xs font-bold text-slate-900 font-mono tracking-tight">
+                          ₹{Number(item.price).toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
                         </div>
                       )}
-                      <div className="text-[10px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">
+                      <div className="text-[10px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-bold shrink-0 shadow-2xs">
                         NSE
                       </div>
                     </div>
