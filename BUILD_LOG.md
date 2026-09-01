@@ -324,8 +324,88 @@ Successfully migrated the entire EquityIQ platform to the **Indian Stock Market 
 - `pytest` (ai-service) — PASSED (14/14 Pytest tests passed cleanly).
 - `npm test` (backend) — PASSED (Jest integration tests passed cleanly).
 
+---
 
+## [2026-08-19] — Final Homepage + RAG Workspace Separation
 
+### Summary
+Surgical 5-bug fix pass to enforce complete architectural separation between Stock Analysis and RAG Document Research. No backend APIs changed. No working functionality rewritten.
+
+### Root Cause Analysis
+After full codebase audit, the architecture was already mostly correct. Five targeted bugs existed in the frontend components.
+
+### Files Modified
+- `frontend/src/components/RAGWorkspace.jsx`:
+  - **Fix 1**: Removed hardcoded `'RELIANCE'` default → `useState(initialSymbol || '')`.
+  - **Fix 5**: `fetchDocuments()` guards with `if (!selectedSymbol)` to prevent empty-symbol API calls.
+  - **Fix 5**: `processFileUpload()` returns early with clear error when no stock selected.
+  - **Fix 5**: Document list empty-state now shows "No stock selected" when `selectedSymbol` is empty.
+  - **Fix 5**: RAG chat empty-state subtitle is contextual based on stock selection.
+
+- `frontend/src/components/StockSearch.jsx`:
+  - **Fix 2**: Hero variant `query` state initializes to `''`. Homepage search box always blank on load.
+  - **Fix 3**: `activeSymbol` sync `useEffect` guarded with `!isHero` — hero search never inherits previous symbol.
+
+- `frontend/src/components/StockDetailsView.jsx`:
+  - **Fix 4**: Removed unused `import RAGWorkspace from './RAGWorkspace'`.
+
+### Behaviour After Fix
+| URL | After |
+|---|---|
+| `http://localhost:3000/` | Hero search always blank; clean homepage ✅ |
+| `http://localhost:3000/stock/RELIANCE` | Stock details + ML rating (unchanged) ✅ |
+| `http://localhost:3000/rag` | RAG workspace starts empty, prompts stock selection ✅ |
+| `http://localhost:3000/stock/TCS` | TCS stock details (unchanged) ✅ |
+
+### Verification Commands Run
+- Backend test suite: `npm test -- --forceExit` — **12/13 suites PASSED (44/53 tests)**.
+  - 1 pre-existing failure: `marketUpdate.test.js` — MongoDB Atlas timeout, unrelated to this phase.
+- Frontend dev server: Vite v5.4.21, ready in 3092ms on `http://localhost:3000`.
+- All 5 code fixes confirmed via file inspection.
+- Playwright browser runner unavailable (CDN 404); manual code audit performed instead.
+
+### Known Issues (Pre-existing)
+- `marketUpdate.test.js`: 9 tests fail — MongoDB Atlas timeout in test env. Pre-existing since Phase 9.
+- `yahoo-finance2` v2 deprecation warnings — cosmetic, do not affect test results.
+
+### Next Phase Readiness
+✅ Stock/RAG separation complete. ✅ No default RELIANCE. ✅ All backend APIs untouched.
+
+---
+
+## [2026-09-01] — Stock Search UI Polish, Intelligent Ranking Engine & Financial Metric Formatting
+
+### Summary
+Resolved navbar search dropdown layout clipping, implemented a multi-tier relevance scoring algorithm to prioritize symbol/company matches over sector matches, enriched authentic NSE stock universe data with key electrical/engineering/electronics companies, corrected market data for telecom stocks, and fixed financial formatting (Market Cap in Lakh Cr, Volume share count without currency symbol, and derived Book Value).
+
+### Root Cause Analysis & Changes Made
+1. **Navbar Dropdown Layout Clipping**: The dropdown suggestions menu was constrained to `left-0 right-0` of the narrow navbar search input (~240px wide), cutting off prices (`₹1,6.`) and `NSE` badges on the right.
+   - **Fix**: Expanded dropdown width in `StockSearch.jsx` to `w-[440px] sm:w-[480px] md:w-[520px] max-w-[92vw]` with `shrink-0` on prices and badges. Added query match text highlighting (`HighlightMatch`) and `Sector Match` indicator badge.
+2. **Search Query Ranking (`ELECO`)**: Substring matching in `Telecommunications` caused all telecom companies to fill search results ahead of symbol/company matches.
+   - **Fix**: Implemented `calculateStockMatchScore` in `stockService.js`:
+     - Exact symbol match: 1000
+     - Symbol prefix match: 800 (e.g. `ELECON` for `ELECO`)
+     - Symbol match: 500
+     - Company prefix: 400
+     - Company word match: 300
+     - Company match: 200
+     - Sector/Industry prefix: 120/100
+     - Sector/Industry substring match: 50/40
+     - Market cap tie-breaker weighting added only for genuine matches.
+3. **NSE Universe Data Enrichment**:
+   - Added authentic companies: `ELECON`, `ELECTCAST`, `BHEL`, `BEL`, `SCHNEIDER`, `EMIL`, `VOLTAMP`, `HAVELLS`, `POLYCAB`, `KEI`, `VGUARD`, `RRKABEL`, `ORIENTELEC`, `BAJAJELEC`.
+   - Corrected realistic prices for telecom stocks (`IDEA` ~₹8.20, `INDUSTOWER` ~₹345.50, `TATACOMM` ~₹1840, `ROUTE`, `HFCL`, `RAILTEL`, `TEJASNET`, `STLTECH`, `MTNL`, `ITILTD`).
+   - Added `bookValue` calculation in stock generator and service.
+4. **Financial Formatting Fixes**:
+   - `formatters.js`: Added `formatMarketCap(val)` (handling Crores >= 100,000 as `₹X.XX Lakh Cr`) and `formatVolume(val)` (share count without `₹` prefix).
+   - `FinancialMetrics.jsx` & `StockChart.jsx` & `StockDetailsView.jsx`: Updated to use `formatMarketCap`, `formatVolume`, and derived fallback for `bookValue`.
+
+### Verification Results
+- **Formatter Test**: Confirmed `formatMarketCap(935000)` -> `₹9.35 Lakh Cr`, `formatVolume(16800000)` -> `1.68 Cr`, `formatINR(208.38)` -> `₹208.38`.
+- **Search Scoring Test**: Confirmed `searchStocks('ELECO')` returns `ELECON` as top result (`score: 800.35`, `matchType: symbol_prefix`) and telecom sector matches ranked below.
+- **Frontend Build**: `npm run build` (Vite v5.4.21) completed cleanly with 0 errors.
+- **Backend Test Suite**: `stocks.test.js` passed all 7 tests.
+- **MongoDB Seeder**: `seedStocks.js` successfully seeded/updated 353 NSE stocks.
 
 
 
