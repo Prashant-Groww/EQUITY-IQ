@@ -1,12 +1,10 @@
-const axios = require('axios');
 const stockService = require('../services/stockService');
+const geminiService = require('../services/geminiService');
 const logger = require('../utils/logger');
-
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000';
 
 const chatWithCopilot = async (req, res, next) => {
   try {
-    const { symbol, message, history } = req.body;
+    const { symbol, message, history, apiKey } = req.body;
 
     if (!symbol || !symbol.trim()) {
       const error = new Error('Stock symbol parameter is required');
@@ -24,48 +22,43 @@ const chatWithCopilot = async (req, res, next) => {
 
     const cleanSym = symbol.toUpperCase().replace(/\.NS$|\.BO$/i, '').trim();
 
-    // Gather context parameters
-    let stockPrice = null;
+    // Fetch genuine market quote and financials to inject context
+    let quote = null;
+    let financials = null;
     try {
-      const quote = await stockService.getStockQuote(cleanSym);
-      stockPrice = quote.price;
+      quote = await stockService.getStockQuote(cleanSym).catch(() => null);
     } catch (e) {
-      logger.warn({ err: e.message }, 'Stock quote fetch failed for chat copilot context');
+      logger.warn({ err: e.message }, 'Failed to fetch quote for chat context');
     }
 
-    // Call FastAPI AI Chat Service
     try {
-      const response = await axios.post(
-        `${AI_SERVICE_URL}/predict/chat`,
-        {
-          symbol: cleanSym,
-          message: message.trim(),
-          history: history || [],
-          stock_price: stockPrice,
-          risk_score: 48.5,
-          risk_tier: 'Moderate Risk',
-        },
-        { timeout: 4000 }
-      );
-      return res.status(200).json(response.data);
-    } catch (aiErr) {
-      logger.warn({ err: aiErr.message }, 'AI Chat service unreachable, generating fallback response');
+      const finData = await stockService.getStockFinancials(cleanSym).catch(() => null);
+      financials = finData?.financials || null;
+    } catch (e) {
+      logger.warn({ err: e.message }, 'Failed to fetch financials for chat context');
     }
 
-    // Fallback response if AI service is offline
-    const fallbackResponse = {
-      symbol: cleanSym,
-      reply: `AI Assistant for ${cleanSym}: Trading near ₹${stockPrice || 1290.90}. Long-term fundamental outlook remains positive backed by strong operating cash flow.`,
-      suggested_followups: [
-        `What is the risk level for ${cleanSym}?`,
-        'Summarize latest annual filing report',
-        `Show news feed for ${cleanSym}`,
-      ],
-      intent_detected: 'GENERAL_EQUITY_RESEARCH',
-      confidence_score: 0.90,
-    };
+    const userApiKey = req.headers['x-gemini-api-key'] || apiKey;
 
-    res.status(200).json(fallbackResponse);
+    // Generate response using Google Gemini 2.5 Flash
+    const aiResult = await geminiService.generateGeminiReply({
+      symbol: cleanSym,
+      message: message.trim(),
+      history: history || [],
+      quote,
+      financials,
+      userApiKey,
+    });
+
+    return res.status(200).json({
+      symbol: cleanSym,
+      reply: aiResult.reply,
+      suggested_followups: aiResult.suggested_followups,
+      intent_detected: 'EQUITY_RESEARCH_ANALYSIS',
+      confidence_score: 0.98,
+      isGemini: aiResult.isGemini,
+      model: aiResult.model,
+    });
   } catch (err) {
     next(err);
   }

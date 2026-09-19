@@ -362,7 +362,7 @@ const getStockQuote = async (symbolInput) => {
   return quoteData;
 };
 
-// 3. Historical Price Series
+// 3. Historical Price Series (Authentic OHLCV Market Data)
 const getStockHistory = async (symbolInput, range = '1M') => {
   const { clean, nse } = parseSymbol(symbolInput);
   const cacheKey = `history_${clean}_${range}`;
@@ -377,55 +377,104 @@ const getStockHistory = async (symbolInput, range = '1M') => {
   const rangeMap = { '1D': '1d', '1W': '5d', '1M': '1mo', '1Y': '1y', '5Y': '5y' };
   const intervalMap = { '1D': '15m', '1W': '1d', '1M': '1d', '1Y': '1wk', '5Y': '1mo' };
 
-  try {
-    const yahooRange = rangeMap[range] || '1mo';
-    const yahooInterval = intervalMap[range] || '1d';
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(nse)}?interval=${yahooInterval}&range=${yahooRange}`;
-    const res = await axios.get(url, { headers: AXIOS_HEADERS, timeout: 2500 });
+  const yahooRange = rangeMap[range] || '1mo';
+  const yahooInterval = intervalMap[range] || '1d';
 
-    if (res.data && res.data.chart && res.data.chart.result && res.data.chart.result[0]) {
-      const result = res.data.chart.result[0];
-      const timestamps = result.timestamp || [];
-      const quotes = result.indicators?.quote?.[0] || {};
-      const closes = quotes.close || [];
-      const volumes = quotes.volume || [];
+  // Attempt NSE ticker first, then BSE fallback
+  const candidateTickers = [nse, `${clean}.BO`, clean];
 
-      historySeries = timestamps
-        .map((ts, idx) => {
-          const closeVal = closes[idx];
-          if (closeVal === null || closeVal === undefined || isNaN(closeVal)) return null;
-          const d = new Date(ts * 1000);
-          return {
-            date: d.toISOString().split('T')[0],
-            close: Number(closeVal.toFixed(2)),
-            volume: volumes[idx] || 0,
-          };
-        })
-        .filter((item) => item !== null);
+  for (const ticker of candidateTickers) {
+    try {
+      const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=${yahooInterval}&range=${yahooRange}`;
+      const res = await axios.get(url, { headers: AXIOS_HEADERS, timeout: 8000 });
+
+      if (res.data && res.data.chart && res.data.chart.result && res.data.chart.result[0]) {
+        const result = res.data.chart.result[0];
+        const timestamps = result.timestamp || [];
+        const quotes = result.indicators?.quote?.[0] || {};
+        const opens = quotes.open || [];
+        const highs = quotes.high || [];
+        const lows = quotes.low || [];
+        const closes = quotes.close || [];
+        const volumes = quotes.volume || [];
+
+        historySeries = timestamps
+          .map((ts, idx) => {
+            const closeVal = closes[idx];
+            if (closeVal === null || closeVal === undefined || isNaN(closeVal)) return null;
+
+            const openVal = opens[idx] != null && !isNaN(opens[idx]) ? opens[idx] : closeVal;
+            const highVal = highs[idx] != null && !isNaN(highs[idx]) ? highs[idx] : Math.max(openVal, closeVal);
+            const lowVal = lows[idx] != null && !isNaN(lows[idx]) ? lows[idx] : Math.min(openVal, closeVal);
+            const volVal = volumes[idx] != null && !isNaN(volumes[idx]) ? volumes[idx] : 0;
+
+            const d = new Date(ts * 1000);
+            const dateStr = range === '1D'
+              ? d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Kolkata' })
+              : d.toISOString().split('T')[0];
+
+            return {
+              date: dateStr,
+              timestamp: ts * 1000,
+              open: Number(openVal.toFixed(2)),
+              high: Number(highVal.toFixed(2)),
+              low: Number(lowVal.toFixed(2)),
+              close: Number(closeVal.toFixed(2)),
+              volume: volVal,
+              isBullish: closeVal >= openVal,
+              priceChange: Number((closeVal - openVal).toFixed(2)),
+            };
+          })
+          .filter((item) => item !== null);
+
+        if (historySeries.length > 0) {
+          logger.info(`Fetched ${historySeries.length} real OHLCV data points for ${ticker}`);
+          break; // Successfully obtained authentic market data
+        }
+      }
+    } catch (err) {
+      logger.warn({ ticker, err: err.message }, `Chart fetch failed for ticker ${ticker}`);
     }
-  } catch (err) {
-    logger.warn({ err: err.message }, `Direct Yahoo history failed for ${clean}`);
   }
 
+  // If external fetch failed, query MongoDB StockMarketData for genuine historical records
   if (historySeries.length === 0) {
-    const mock = STOCKS_MAP[clean] || { price: 1500.00 };
-    const basePrice = mock.price || 1500.00;
-    const days = range === '1D' ? 1 : range === '1W' ? 7 : range === '1M' ? 30 : range === '1Y' ? 365 : 1825;
-    const now = Date.now();
+    try {
+      const dbRecords = await StockMarketData.find({ symbol: clean })
+        .sort({ date: 1 })
+        .limit(60)
+        .lean();
 
-    for (let i = days; i >= 0; i--) {
-      const d = new Date(now - i * 86400000);
-      const varPct = (Math.sin(i * 0.4) * 0.03);
-      historySeries.push({
-        date: d.toISOString().split('T')[0],
-        close: Number((basePrice * (1 + varPct)).toFixed(2)),
-        volume: Math.floor(1000000 + (i % 5) * 500000),
-      });
+      if (dbRecords && dbRecords.length > 0) {
+        historySeries = dbRecords.map((r) => ({
+          date: r.date,
+          open: r.open || r.close,
+          high: r.high || r.close,
+          low: r.low || r.close,
+          close: r.close,
+          volume: r.volume || 0,
+          isBullish: (r.close || 0) >= (r.open || r.close || 0),
+          priceChange: Number(((r.close || 0) - (r.open || r.close || 0)).toFixed(2)),
+        }));
+      }
+    } catch (dbErr) {
+      logger.warn({ err: dbErr.message }, `MongoDB historical lookup failed for ${clean}`);
     }
   }
 
-  const output = { symbol: clean, range, history: historySeries };
-  stockCache.set(cacheKey, output, 300);
+  const output = {
+    symbol: clean,
+    range,
+    history: historySeries,
+    isRealData: historySeries.length > 0,
+    message: historySeries.length === 0 ? 'Live exchange data currently unavailable for this symbol' : null,
+  };
+
+  // Cache authentic data
+  if (historySeries.length > 0) {
+    stockCache.set(cacheKey, output, 300);
+  }
+
   return output;
 };
 

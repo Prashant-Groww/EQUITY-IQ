@@ -17,6 +17,7 @@ const alertRoutes = require('./routes/alertRoutes');
 const exportRoutes = require('./routes/exportRoutes');
 
 const adminRoutes = require('./routes/adminRoutes');
+const indicesRoutes = require('./routes/indicesRoutes');
 
 const app = express();
 
@@ -28,6 +29,8 @@ app.use(pinoHttp({ logger }));
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/indices', indicesRoutes);
+app.use('/api/stocks/indices', indicesRoutes);
 app.use('/api/stocks', stockRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/news', newsRoutes);

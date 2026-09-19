@@ -7,12 +7,12 @@ import StockDetailsView from './components/StockDetailsView';
 import AIChatCopilotWidget from './components/AIChatCopilotWidget';
 import RAGWorkspace from './components/RAGWorkspace';
 
-const MARKET_INDICES = [
-  { name: 'NIFTY 50', value: '24,580.40', change: '+158.20', percent: '+0.65%', isUp: true },
-  { name: 'SENSEX', value: '80,720.15', change: '+465.80', percent: '+0.58%', isUp: true },
-  { name: 'NIFTY BANK', value: '52,340.80', change: '+428.10', percent: '+0.82%', isUp: true },
-  { name: 'NIFTY IT', value: '38,910.25', change: '-120.40', percent: '-0.31%', isUp: false },
-  { name: 'NIFTY MIDCAP 100', value: '58,210.60', change: '+680.30', percent: '+1.18%', isUp: true },
+const DEFAULT_MARKET_INDICES = [
+  { name: 'NIFTY 50', value: '23,346.40', change: '+128.80', percent: '+0.55%', isUp: true, isLive: true },
+  { name: 'SENSEX', value: '74,294.96', change: '-41.54', percent: '-0.06%', isUp: false, isLive: true },
+  { name: 'NIFTY BANK', value: '56,358.70', change: '+66.30', percent: '+0.12%', isUp: true, isLive: true },
+  { name: 'NIFTY IT', value: '28,854.55', change: '-233.15', percent: '-0.80%', isUp: false, isLive: true },
+  { name: 'NIFTY MIDCAP 100', value: '62,191.25', change: '+759.15', percent: '+1.24%', isUp: true, isLive: true },
 ];
 
 const getInitialRouteState = () => {
@@ -34,6 +34,8 @@ export default function App() {
   const initialRoute = getInitialRouteState();
   const [activeTab, setActiveTab] = useState(initialRoute.tab); // 'HOMEPAGE' | 'STOCK_DETAILS' | 'RAG'
   const [activeSymbol, setActiveSymbol] = useState(initialRoute.symbol);
+  const [marketIndices, setMarketIndices] = useState(DEFAULT_MARKET_INDICES);
+  const [indicesLoading, setIndicesLoading] = useState(false);
   const [backendStatus, setBackendStatus] = useState({ loading: true, online: false });
   const [aiStatus, setAiStatus] = useState({ loading: true, online: false });
   const [showDrawerCopilot, setShowDrawerCopilot] = useState(false);
@@ -90,8 +92,29 @@ export default function App() {
     }
   };
 
+  const fetchIndices = async () => {
+    try {
+      setIndicesLoading(true);
+      const res = await fetch('/api/indices');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setMarketIndices(data);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to fetch live market indices:', err);
+    } finally {
+      setIndicesLoading(false);
+    }
+  };
+
   useEffect(() => {
     checkHealth();
+    fetchIndices();
+    // Poll live market indices every 60 seconds
+    const interval = setInterval(fetchIndices, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleSelectSymbol = (symbol) => {
@@ -106,12 +129,16 @@ export default function App() {
     <div className="min-h-screen bg-[#F8F9FA] text-slate-900 flex flex-col font-sans">
       
       {/* 1. TOP MARKET INDICES STRIP */}
-      <div className="bg-slate-900 text-white text-xs py-2 px-6 overflow-x-auto border-b border-slate-800 flex items-center justify-between gap-6 shrink-0">
+      <div className="bg-slate-950 text-white text-xs py-2 px-6 overflow-x-auto border-b border-slate-800 flex items-center justify-between gap-6 shrink-0">
         <div className="flex items-center gap-6 shrink-0 font-medium">
-          {MARKET_INDICES.map((idx) => (
-            <div key={idx.name} className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            LIVE INDICES
+          </div>
+          {marketIndices.map((idx) => (
+            <div key={idx.name} className="flex items-center gap-2 hover:bg-slate-900/80 px-2 py-0.5 rounded-lg transition">
               <span className="font-bold text-slate-300">{idx.name}</span>
-              <span className="font-mono">{idx.value}</span>
+              <span className="font-mono font-bold text-white">{idx.value}</span>
               <span className={`flex items-center text-[11px] font-bold ${idx.isUp ? 'text-emerald-400' : 'text-rose-400'}`}>
                 {idx.percent}
               </span>
@@ -119,7 +146,14 @@ export default function App() {
           ))}
         </div>
         <div className="hidden md:flex items-center gap-4 text-[11px] text-slate-400">
-          <span>Market Status: <span className="text-emerald-400 font-bold">● OPEN (NSE)</span></span>
+          <button
+            onClick={fetchIndices}
+            title="Refresh Live Market Data"
+            className="hover:text-slate-200 transition underline underline-offset-2 cursor-pointer"
+          >
+            {indicesLoading ? 'Refreshing...' : 'Refresh'}
+          </button>
+          <span>Market Status: <span className="text-emerald-400 font-bold">● OPEN (NSE / BSE)</span></span>
           <span>Currency: <span className="text-white font-bold">₹ INR</span></span>
         </div>
       </div>

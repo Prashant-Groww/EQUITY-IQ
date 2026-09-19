@@ -4,7 +4,6 @@ import StockChart from './StockChart';
 import FinancialMetrics from './FinancialMetrics';
 import MLRatingWidget from './MLRatingWidget';
 import RiskAnalyticsWidget from './RiskAnalyticsWidget';
-import NewsFeed from './NewsFeed';
 import { formatINR } from '../utils/formatters';
 
 export default function StockDetailsView({ symbol, onBackToSearch, onNavigateToRAG }) {
@@ -244,10 +243,6 @@ export default function StockDetailsView({ symbol, onBackToSearch, onNavigateToR
           <span>Open RAG Research Workspace &rarr;</span>
         </button>
       </div>
-
-      {/* 8. FINANCIAL NEWS & SENTIMENT FEED */}
-      <NewsFeed symbol={symbol} />
-
     </div>
   );
 }
