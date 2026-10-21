@@ -146,6 +146,28 @@ describe('Stock Data & Search Engine API Integration Tests (500+ Indian Equities
     });
   });
 
+  describe('GET /api/stocks/:symbol/rating', () => {
+    it('should return complete explainable ML rating for TCS', async () => {
+      const res = await request(app).get('/api/stocks/TCS/rating');
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty('symbol', 'TCS');
+      expect(res.body).toHaveProperty('recommendation');
+      expect(['STRONG_BUY', 'BUY', 'HOLD', 'SELL', 'STRONG_SELL']).toContain(res.body.recommendation);
+      expect(res.body).toHaveProperty('confidence_pct');
+      expect(res.body.confidence_pct).toBeGreaterThan(0);
+      expect(res.body).toHaveProperty('overall_score');
+      expect(res.body).toHaveProperty('pillars');
+      expect(res.body).toHaveProperty('positive_factors');
+      expect(res.body).toHaveProperty('negative_factors');
+      expect(res.body).toHaveProperty('data_freshness');
+    });
+
+    it('should return 404 NOT_FOUND for rating of an unlisted stock', async () => {
+      const res = await request(app).get('/api/stocks/NONEXISTENT999XYZ/rating');
+      expect(res.statusCode).toBe(404);
+    });
+  });
+
   describe('TTL Caching Verification', () => {
     it('should hit cache on subsequent quote request', async () => {
       await stockService.getStockQuote('HDFCBANK');

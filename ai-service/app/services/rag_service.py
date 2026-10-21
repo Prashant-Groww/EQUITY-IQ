@@ -54,7 +54,7 @@ def query_rag_engine(request: RAGQueryRequest) -> RAGQueryResponse:
 
         similarities = cosine_similarity(query_vec, doc_vecs).flatten()
     except Exception as e:
-        logger.warn(f"TF-IDF vectorization fallback: {str(e)}")
+        logger.warning(f"TF-IDF vectorization fallback: {str(e)}")
         # Substring / keyword overlap calculation fallback
         q_words = set(query_text.lower().split())
         for idx, chunk in enumerate(kb_chunks):

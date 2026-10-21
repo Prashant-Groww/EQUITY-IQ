@@ -28,7 +28,7 @@ def load_artifacts():
         except Exception as e:
             logger.error(f"Error loading model artifacts: {e}")
     
-    logger.warn("ML model artifacts not found. Heuristic fallback classifier active.")
+    logger.warning("ML model artifacts not found. Heuristic fallback classifier active.")
     return None, None
 
 def clean_text(text: str) -> str:

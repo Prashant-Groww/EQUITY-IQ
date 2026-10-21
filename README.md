@@ -1,87 +1,103 @@
 # EquityIQ — Enterprise AI-Powered Equity Research Assistant (Indian Stock Market)
 
-EquityIQ is a full-stack, enterprise-grade AI assistant for equity research, fundamental valuation, financial news aggregation, sentiment analysis, quantitative risk modeling, corporate document extraction, RAG semantic search, interactive copilot assistance, portfolio analytics, custom price alerting, and research report exporting focused on the **Indian Stock Market (NSE / BSE in ₹ INR)**.
+EquityIQ is a full-stack, enterprise-grade AI assistant for Indian equity research, fundamental valuation, stock search, ML stock rating, financial news aggregation, sentiment analysis, quantitative risk modeling, corporate document extraction, RAG semantic search, interactive copilot assistance, and research report exporting focused on the **Indian Stock Market (NSE / BSE in ₹ INR)**.
 
 ---
 
 ## 🏛️ Indian Stock Market Focus
 
 - **Primary Exchanges**: National Stock Exchange of India (NSE) & Bombay Stock Exchange (BSE)
-- **Supported Tickers**: RELIANCE, TCS, INFY, HDFCBANK, ICICIBANK, SBIN, LT, BHARTIARTL, ITC, AXISBANK, ASIANPAINT, MARUTI, TATAMOTORS, SUNPHARMA, WIPRO, HCLTECH, ADANIENT, ADANIPORTS, KOTAKBANK, ULTRACEMCO, etc.
+- **Supported Tickers**: 769+ authentic NSE-listed equities covering Nifty 50, Nifty Next 50, Nifty Midcap 150, and Nifty Smallcap 250 (TCS, RELIANCE, INFY, HDFCBANK, ICICIBANK, SBIN, LT, BHARTIARTL, ITC, AXISBANK, ASIANPAINT, MARUTI, TATAMOTORS, SUNPHARMA, WIPRO, HCLTECH, ADANIENT, ELECON, BHEL, etc.).
 - **Currency & Financial Notation**: Indian Rupee (₹ INR), Lakhs (L), and Crores (Cr)
-- **Benchmark Index**: Nifty 50 (Risk Beta & Relative Volatility)
+- **Benchmark Index**: Nifty 50 (Risk Beta & Relative Market Performance)
+
+---
+
+## 🔍 Upgraded Stock Search Engine
+
+The stock search system has been upgraded to deliver fast, accurate, and intelligent company discovery across 769+ NSE equities without relying on external APIs or small hardcoded lists.
+
+### 1. 7-Tier Relevance Ranking Algorithm
+Query matching executes sequentially through prioritized relevance tiers to ensure exact matches rank first:
+1. **Tier 1 (Exact NSE Symbol Match — 1000 pts)**: Entering `TCS` returns `TCS` (Tata Consultancy Services) at Rank #1.
+2. **Tier 2 (Exact Company Name Match — 900 pts)**: Entering `Tata Consultancy Services` ranks TCS at #1.
+3. **Tier 3 (Exact Alias Match — 850 pts)**: Common corporate aliases resolve immediately:
+   - `HDFC` -> `HDFCBANK`
+   - `SBI` -> `SBIN`
+   - `L&T` -> `LT`
+   - `Tata Motors` -> `TATAMOTORS`
+4. **Tier 4 (Symbol Prefix Match — 800+ pts)**: Typing `ELECO` matches `ELECON` immediately, rather than showing unrelated companies containing similar letters.
+5. **Tier 5 (Company Name Prefix Match — 750 pts)**: Typing `Tata Consult` returns Tata Consultancy Services.
+6. **Tier 6 (Alias Prefix & Substring Match — 700 / 400 pts)**: Partial alias and internal name matching.
+7. **Tier 7 (Sector & Industry Match — 150 / 140 pts)**: Queries like `Banking`, `Information Technology`, or `Capital Goods` list all constituents within that sector, tagged with a `Sector Match` badge.
+
+### 2. Zero Fallback & Accurate Symbol Resolution
+- **No Silent Substitutions**: A failed or unlisted search never falls back to Reliance Industries or any default stock.
+- **Clear Empty State**: Displays an informative "No matching stocks found" notification with search tips.
+- **Guaranteed Symbol Integrity**: Selecting a search result opens the stock details page for that exact symbol.
+
+### 3. Autocomplete Search UI/UX
+- **Debounced API Requests (220ms)** with `AbortController` cancellation to prevent race conditions and stale responses.
+- **Full Keyboard Navigation**: `ArrowDown`, `ArrowUp`, `Enter` to select, and `Escape` to close.
+- **Clearable Recent Searches**: Saved locally in browser storage with individual removal and "Clear All" action.
+- **Popular Stocks Filter**: Shown only when the input field is empty; never mixed into active query results.
+- **Dynamic Monogram Avatars**: Consistent color-hashed initial badges, showing verified company logos when available.
+
+---
+
+## 🧠 Explainable ML Stock Rating Engine
+
+The rating system uses a data-driven, calibrated ensemble classifier and multi-factor analytical scoring across 5 tiers:
+`STRONG_BUY`, `BUY`, `HOLD`, `SELL`, and `STRONG_SELL`.
+
+### 1. Multi-Factor Parameter Groups
+- **Valuation**: P/E ratio, Sector-relative P/E, P/B ratio, Dividend Yield, and derived Book Value.
+- **Profitability & Efficiency**: Return on Equity (ROE), Return on Capital Employed (ROCE), Operating Profit Margin (OPM).
+- **Financial Strength & Debt**: Debt-to-Equity (D/E), Interest Coverage ratio, and Current ratio.
+  - *Sector-Aware Bank Handling*: Banking and Financial Services (e.g. HDFCBANK, SBIN, ICICIBANK) are evaluated using capital adequacy and banking solvency standards rather than penalizing commercial deposit leverage.
+- **Market Trend & Momentum**: 1-month, 3-month, and 1-year total returns, RSI (14), and benchmark relative strength.
+- **Risk & Volatility**: 20-day annualized volatility, Beta relative to Nifty 50, and downside volatility risk.
+- **Earnings Quality & Sentiment**: Operational cash flow alignment and financial news headline sentiment.
+
+### 2. Statistically Calibrated Class Probabilities
+- Uses `CalibratedClassifierCV` (sigmoid/isotonic) so that confidence percentages represent true statistical class probabilities rather than arbitrary static numbers.
+- Displays full category probability distribution: `STRONG_BUY`, `BUY`, `HOLD`, `SELL`, `STRONG_SELL`.
+
+### 3. Five Core Analytical Pillars (0 to 100)
+1. **Valuation**: Evaluated against sector median benchmarks.
+2. **Profitability**: Evaluated against capital productivity thresholds.
+3. **Financial Health**: Evaluated based on balance sheet solvency and industry-specific capital structures.
+4. **Momentum**: Evaluated on price trends and RSI momentum.
+5. **Risk Profile**: Evaluated on Beta and annualized volatility.
+
+### 4. Explainability & Missing-Data Guard
+- **Explainable Factors**: Generates specific positive drivers (e.g. *"High capital efficiency with 33.5% ROE"*), negative factors (e.g. *"P/E valuation of 28.5x trades at premium"*), and risk indicators.
+- **Insufficient Data Guard**: If fewer than 2 verifiable metrics are available for a company, the engine returns `INSUFFICIENT_DATA` with a 0 score and explicit rationale rather than fabricating a misleading rating.
+- **Missing Value Imputation**: Imputes unpopulated non-critical metrics using authentic sector median benchmarks (`SECTOR_BENCHMARKS`).
+- **Telemetry & Freshness**: Outputs data completeness percentage, ISO evaluation timestamp, and model version (`EquityIQ-v2.1-CalibratedEnsemble`).
+- **Regulatory Disclaimer**: Prominently notes that ML ratings are mathematical research tools, not SEBI-registered financial advisory services.
 
 ---
 
 ## 🚀 Microservice Architecture
 
-1. **React Frontend Workspace (`frontend/`)**: React + Vite + Tailwind CSS dashboard featuring live price series charts, financial metrics grid, portfolio & watchlist manager, AI rebalancing advisor, custom price alert engine, interactive AI chat copilot, RAG filing retriever, report upload processor, sentiment analyzer, and research brief PDF exporter.
-2. **Node.js Express API Gateway (`backend/`)**: Express API server managing authentication, live Yahoo v8 NSE stock quote engine, news ingestion & deduplication, portfolio holdings valuation, custom rule triggers, and forwarding requests to the Python AI engine.
+1. **React Frontend Workspace (`frontend/`)**: React + Vite + Tailwind CSS dashboard featuring live price series charts, financial metrics grid, 769+ stock autocomplete search, ML rating widget with 5 pillars and calibrated confidence, dedicated RAG workspace, and PDF/CSV uploaders.
+2. **Node.js Express API Gateway (`backend/`)**: Express API server managing stock master data (`Stock`), daily market data (`StockMarketData`), search ranking engine, news ingestion, and proxying to the Python AI service.
 3. **Python FastAPI AI Engine (`ai-service/`)**: FastAPI microservice hosting:
+   - ML Calibrated Ensemble Stock Rating Engine (`app/services/rating_service.py`)
    - ML News Sentiment Classifier (TF-IDF + Scikit-Learn)
    - ML Quantitative Risk & Volatility Model (GradientBoostingRegressor)
-   - Filing Extractor & Document NLP Summarizer
-   - RAG Vector Store & Cosine Similarity Context Retriever (ChromaDB + Cosine Similarity)
-   - Intent-aware Conversational AI Chat Copilot Engine
-   - Portfolio Diversification & Rebalancing Optimization Service
-   - Executive Equity Research Brief Synthesizer
-4. **Database Container (`mongo`)**: MongoDB 7.0 container persisting user accounts, indexed news articles, uploaded corporate filings, portfolio holdings, watchlists, and alert rules.
-
----
-
-## 🛠️ Complete 12-Phase Roadmap Status
-
-| Phase | System Module | Status |
-| :--- | :--- | :--- |
-| **Phase 1** | Monorepo Setup & Docker Infrastructure | ✅ Completed |
-| **Phase 2** | MongoDB Persistence & JWT Authentication | ✅ Completed |
-| **Phase 3** | Indian Stock Market Real-Time Data Engine (NSE/BSE) | ✅ Completed |
-| **Phase 4** | Financial News Ingestion & Deduplication | ✅ Completed |
-| **Phase 5** | ML News Headline Sentiment Classifier | ✅ Completed |
-| **Phase 6** | ML Risk & Quantitative Volatility Model | ✅ Completed |
-| **Phase 7** | Corporate Filing NLP Extraction & Summarizer | ✅ Completed |
-| **Phase 8** | RAG Vector Knowledge Indexing & Semantic Search | ✅ Completed |
-| **Phase 9** | AI Chat Assistant (Interactive Research Copilot) | ✅ Completed |
-| **Phase 10** | Portfolio Management, Watchlist & AI Rebalancing Advisor | ✅ Completed |
-| **Phase 11** | Custom Alert Engine & Research Brief Exporter | ✅ Completed |
-| **Phase 12** | **Production Hardening, E2E Verification & Deployment** | ✅ **Completed** |
-
----
-
-## 📈 Daily Indian Stock Price Update System
-
-EquityIQ features an automated, rate-limited daily market data pipeline:
-- **Separation of Concerns**: Stock master data (`Stock` collection) is maintained separately from historical daily price sessions (`StockMarketData` collection).
-- **Automated Cron Scheduler**: Background `node-cron` worker triggers every trading day after market close (`MARKET_UPDATE_CRON="30 16 * * 1-5"`, timezone `Asia/Kolkata`).
-- **Upsert Idempotency**: Unique compound index `{ symbol: 1, date: -1 }` guarantees zero duplicate daily records on repeated runs.
-- **Rate-Limited Batching**: Fetches Yahoo Finance NSE market data in controlled batches (10 stocks per batch, 250ms delay) with exponential backoff retry.
-- **Strict Symbol Isolation**: Preserves exact ticker symbols throughout the pipeline. Zero fake or cross-contaminated fallback prices.
-- **Manual Trigger Endpoint**: Admin endpoint (`POST /api/admin/stocks/update-prices`) allows on-demand price refresh and execution status inspection (`GET /api/admin/stocks/update-status`).
-- **UI Timestamp Badge**: Displays formatted IST timestamp `"Last Updated: DD/MM/YYYY HH:MM IST"` on research charts and metric grids.
-
----
-
-## 🌐 Product Separation & URL Routing Architecture
-
-EquityIQ separates Stock Discovery & Analysis from Document AI Research across distinct routes:
-
-- **Homepage (`/`)**:
-  - Focuses strictly on Indian stock discovery with a hero search input (`🔍 Search company or NSE symbol...`), popular search chips (`TCS`, `INFY`, `RELIANCE`, `HDFCBANK`), product overview, and feature highlights.
-  - **No default preselected stock**, **no RAG chatbot**, and **no auto-redirect to `/rag`**.
-- **Stock Analysis (`/stock/:symbol`)**:
-  - Displays full fundamentals for `:symbol` (Company Header, Price & Change %, 22+ Financial Ratios, Price Chart, ML Rating Engine with BUY/SELL recommendation & SHAP drivers, Quantitative Risk Analytics, News Feed).
-  - Includes a link banner: `[ Open RAG Research Workspace ]` navigating to `/rag?symbol=SYMBOL`.
-- **RAG Research Workspace (`/rag`)**:
-  - Dedicated 2-column workspace combining Left-side Document Management (PDF & CSV drag & drop upload, stock-document association `document -> RELIANCE`, document status, checkboxes `☑`, `Select All` / `Clear All`, `Delete`) and Right-side Ask Your Documents search & grounded Q&A with file page/row citations.
+   - RAG Vector Store & Cosine Similarity Context Retriever (ChromaDB)
+   - Document NLP Extractor (PDF & CSV parser via `pypdf` and `pandas`)
+4. **Database Container (`mongo`)**: MongoDB 7.0 container persisting stock master universe, historical daily prices, user accounts, and uploaded filings.
 
 ---
 
 ## ⚡ Quickstart with Docker Compose
 
-Ensure Docker Desktop is running, then launch all microservices in production mode:
+Launch all microservices in production mode:
 
 ```bash
-# Launch production stack
 docker compose -f docker-compose.prod.yml up --build -d
 ```
 
@@ -95,26 +111,32 @@ docker compose -f docker-compose.prod.yml up --build -d
 
 ## 🧪 Comprehensive Verification & Testing
 
-Run Python AI Service test suite (12/12 unit tests):
+### 1. Backend Search & Rating Tests (18/18 Integration Tests)
+```bash
+cd backend
+npm test -- --testPathPattern=stocks
+```
+Verifies:
+- Exact symbol (`TCS`), exact name (`Tata Consultancy Services`), and partial name (`Tata Consult`)
+- Alias resolution (`HDFC` -> `HDFCBANK`, `SBI` -> `SBIN`, `L&T` -> `LT`)
+- Sector search (`Banking`) and prefix prioritization (`ELECO` -> `ELECON`)
+- Zero fallback to Reliance on non-matching queries
+- Complete explainable ML rating and 404 on unlisted symbols
+
+### 2. Python AI Service Tests
 ```bash
 cd ai-service
-pytest
+pytest app/tests/test_rating.py
 ```
+Verifies:
+- Standard multi-factor prediction with pillars and feature importances
+- Bank sector leverage handling (D/E not penalized like industrial)
+- Insufficient data guard returning `INSUFFICIENT_DATA` with 0 score
+- Input parameter validation (400 on empty symbol)
 
-Run Backend integration test suite (44/44 integration tests across 12 test suites):
-```bash
-cd backend
-npm test
-```
-
-Run Live 12-Feature System Verification:
-```bash
-cd backend
-node src/tests/system_verification.js
-```
-
-Build Frontend Production Assets:
+### 3. Frontend Production Build
 ```bash
 cd frontend
 npm run build
 ```
+Compiles Vite production assets cleanly with 0 syntax or bundle errors.

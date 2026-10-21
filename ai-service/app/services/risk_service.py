@@ -15,12 +15,15 @@ _scaler = None
 def load_risk_artifacts():
     global _model, _scaler
     if _model is None or _scaler is None:
-        if os.path.exists(MODEL_PATH) and os.path.exists(SCALER_PATH):
-            _model = joblib.load(MODEL_PATH)
-            _scaler = joblib.load(SCALER_PATH)
-            logger.info("Successfully loaded ML Risk Model and Scaler joblib artifacts.")
-        else:
-            logger.warning(f"Risk model artifacts not found at {MODEL_PATH}, using fallback heuristics.")
+        try:
+            if os.path.exists(MODEL_PATH) and os.path.exists(SCALER_PATH):
+                _model = joblib.load(MODEL_PATH)
+                _scaler = joblib.load(SCALER_PATH)
+                logger.info("Successfully loaded ML Risk Model and Scaler joblib artifacts.")
+            else:
+                logger.warning(f"Risk model artifacts not found at {MODEL_PATH}, using fallback heuristics.")
+        except Exception as e:
+            logger.warning(f"Unable to load risk model artifacts ({e}), fallback heuristics active.")
 
 def calculate_rsi(prices: np.ndarray, window: int = 14) -> float:
     if len(prices) <= window:

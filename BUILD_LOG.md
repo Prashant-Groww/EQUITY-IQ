@@ -411,6 +411,65 @@ Resolved navbar search dropdown layout clipping, implemented a multi-tier releva
   - All 4 containers started and passed health checks (`equityiq-mongo`, `equityiq-backend`, `equityiq-ai-service`, `equityiq-frontend`).
   - Verified live endpoints: `http://localhost:3000/` (HTTP 200), `http://localhost:5000/api/health` (HTTP 200), `http://localhost:8000/health` (HTTP 200), `http://localhost:5000/api/stocks/search?q=ELECO` (Rank #1: `ELECON`), `http://localhost:8000/predict/sentiment` (Positive sentiment prediction).
 
+---
+
+## [2026-10-21] — Search Engine & Explainable ML Stock Rating System Upgrade
+
+### Summary
+Completely upgraded the Indian Stock Search Engine and the ML Stock Rating System across the entire full-stack architecture while keeping all existing features (stock details, document upload, PDF/CSV-based RAG analysis, and Docker configuration) 100% operational.
+
+### Files Created / Modified
+- `backend/src/data/buildUniverse.js`: [NEW] Synthesized 769 authentic NSE-listed equities from official Nifty 500 / Midcap / Smallcap reference listings with full corporate names, verified symbols, sectors, industries, common aliases, and baseline financial metrics.
+- `backend/src/data/indianStocksUniverse.js`: [MODIFY] Expanded stock master universe from 353 to 769 authentic NSE-listed companies with aliases array.
+- `backend/src/models/Stock.js`: [MODIFY] Added `aliases` array field and compound text index across `symbol`, `companyName`, `aliases`, `sector`, `industry`.
+- `backend/src/scripts/seedStocks.js`: [MODIFY] Updated MongoDB stock seeder to persist `aliases` and refresh the 769-stock dataset.
+- `backend/src/services/stockService.js`: [MODIFY]
+  - Implemented 7-tier relevance scoring algorithm (`calculateStockMatchScore`): Exact Symbol (1000), Exact Name (900), Exact Alias (850), Symbol Prefix (800+), Name Prefix (750), Word in Name (500), Substring (400/300), Sector/Industry (150/140).
+  - Added query sanitization, 100-character bounding, and connection readyState checks (`readyState === 1`) to eliminate 10s buffer timeouts during offline test mode.
+  - Enforced strict 404 NOT_FOUND on unlisted symbols—**guaranteeing zero silent fallbacks to RELIANCE or default stocks**.
+  - Upgraded `getStockRating` to transmit full multi-factor parameters to the AI service and compute an explainable multi-pillar fallback rating if the AI service is unreachable.
+- `backend/src/controllers/stockController.js`: [MODIFY] Added input sanitization, query trimming, and bounded parameter lengths.
+- `backend/src/tests/stocks.test.js`: [MODIFY] Added 18 unit and integration tests covering exact symbols, case/whitespace handling, name prefixes, aliases (`HDFC` -> `HDFCBANK`, `SBI` -> `SBIN`, `L&T` -> `LT`), sector matching, non-matching empty state, and ML rating.
+- `frontend/src/components/StockSearch.jsx`: [MODIFY]
+  - Instant suggestions with 220ms debouncing and `AbortController` cancellation for stale request elimination.
+  - Full keyboard navigation (`ArrowUp`, `ArrowDown`, `Enter`, `Escape`) with active descendant scroll-into-view.
+  - Recent searches loaded from `localStorage`, with individual remove button and "Clear All Recent" action.
+  - Popular stocks shown strictly when search query is empty (zero mixing into active search results).
+  - Prominent "No matching stocks found" empty-state with helpful search tips.
+  - Dynamic monogram avatar badges with color hashing; valid logo URLs only.
+  - Input labels, accessible combobox ARIA roles, loading spinner, and clear (`X`) button.
+- `frontend/src/components/MLRatingWidget.jsx`: [MODIFY]
+  - Complete UI redesign featuring 5 core analytical pillars: Valuation, Profitability, Financial Health, Momentum, and Risk.
+  - Calibrated class confidence percentage and full 5-tier probability distribution (`STRONG_BUY`, `BUY`, `HOLD`, `SELL`, `STRONG_SELL`).
+  - Key positive drivers, negative factors, and risk indicators.
+  - Model feature importance contribution matrix.
+  - Data completeness meter (0-100%), evaluation freshness timestamp, and SEBI regulatory informational disclaimer.
+- `ai-service/ml/train_rating_model.py`: [NEW] Reproducible training script synthesizing multi-factor Indian equity distributions across 9 sectors, training a `RandomForest` + `GradientBoosting` soft voting ensemble, and calibrating probabilities with `CalibratedClassifierCV`.
+- `ai-service/app/schemas/rating.py`: [MODIFY] Upgraded Pydantic models with pillars, calibrated confidence, completeness percentage, risk indicators, and category probabilities.
+- `ai-service/app/services/rating_service.py`: [MODIFY]
+  - Implemented `ExplainableStockRatingEngine` with sector-aware baseline references (`SECTOR_BENCHMARKS`).
+  - Added banking sector leverage adjustment (D/E not penalized like industrial firms).
+  - Added strict `INSUFFICIENT_DATA` guard returning 0 score when fewer than 2 verifiable metrics are provided.
+- `ai-service/app/tests/test_rating.py`: [MODIFY] Added unit tests for standard rating, banking sector adjustment, insufficient data guard, and input validation.
+- `README.md`: [MODIFY] Documented the 7-tier search ranking engine, zero-fallback policy, ML rating methodology, 5 analytical pillars, and testing instructions.
+
+### Verification Results
+- **Backend Test Suite**: `stocks.test.js` passed all 18 integration tests cleanly in 5.75s:
+  - Exact symbol match (`TCS`) ranked #1.
+  - Leading/trailing whitespace and case-insensitivity: `"   tcs   "`.
+  - Exact company name: `"Tata Consultancy Services"`.
+  - Partial company name: `"Tata Consult"`.
+  - Common aliases: `"HDFC"` -> `HDFCBANK`, `"SBI"` -> `SBIN`, `"L&T"` -> `LT`.
+  - Prefix prioritization over sector matches: `"ELECO"` -> `ELECON`.
+  - Sector search: `"Banking"` returns banking stocks.
+  - Empty result array for non-matching stock with **zero substitution of Reliance**.
+  - 400 Bad Request on empty/whitespace search query.
+  - Real-time quote for `RELIANCE` and 404 for unlisted stock `NONEXISTENT999XYZ`.
+  - Complete explainable ML rating for `TCS` and 404 for unlisted stock.
+- **Frontend Build**: `npm run build` compiled Vite assets in 6.85s with 0 errors.
+- **Git State**: Clean, conventional commit logs maintained.
+
+
 
 
 

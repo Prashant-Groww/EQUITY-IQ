@@ -15,7 +15,7 @@ def extract_text_from_pdf(pdf_bytes: bytes, filename: str = "document.pdf") -> l
     """
     chunks = []
     if pypdf is None:
-        logger.warn("pypdf is not installed, attempting fallback plain text decoder")
+        logger.warning("pypdf is not installed, attempting fallback plain text decoder")
         raw_text = pdf_bytes.decode('utf-8', errors='ignore')
         return [{"page": 1, "text": raw_text[:5000]}]
 

@@ -1,0 +1,124 @@
+{
+  "model_name": "EquityIQ-MultiFactor-CalibratedEnsemble",
+  "model_version": "2.1.0",
+  "training_timestamp": "2026-10-21T17:59:51.228888+00:00",
+  "n_training_samples": 3500,
+  "classes": [
+    "STRONG_SELL",
+    "SELL",
+    "HOLD",
+    "BUY",
+    "STRONG_BUY"
+  ],
+  "feature_names": [
+    "pe_ratio",
+    "pb_ratio",
+    "dividend_yield",
+    "roe",
+    "roce",
+    "operating_margin",
+    "debt_to_equity",
+    "interest_coverage",
+    "current_ratio",
+    "revenue_growth_yoy",
+    "profit_growth_yoy",
+    "return_1m",
+    "return_3m",
+    "return_1y",
+    "rsi",
+    "volatility_20d",
+    "beta",
+    "sentiment_score",
+    "is_financial_sector"
+  ],
+  "feature_importances": {
+    "Profitability (ROE/ROCE)": 0.25,
+    "Valuation (P/E & P/B)": 0.22,
+    "Balance Sheet Solvency (D/E)": 0.22,
+    "Market Momentum & Trend": 0.16,
+    "Risk Profile (Beta/Vol)": 0.15
+  },
+  "sector_benchmarks": {
+    "Financial Services": {
+      "pe": 16.5,
+      "pb": 2.2,
+      "roe": 15.5,
+      "roce": 14.0,
+      "de": 4.5,
+      "opm": 24.0,
+      "beta": 1.15
+    },
+    "Information Technology": {
+      "pe": 26.5,
+      "pb": 6.8,
+      "roe": 24.0,
+      "roce": 28.5,
+      "de": 0.08,
+      "opm": 22.5,
+      "beta": 0.88
+    },
+    "Automobile": {
+      "pe": 22.0,
+      "pb": 3.4,
+      "roe": 17.0,
+      "roce": 18.5,
+      "de": 0.45,
+      "opm": 13.5,
+      "beta": 1.05
+    },
+    "Pharmaceuticals": {
+      "pe": 29.0,
+      "pb": 4.2,
+      "roe": 16.5,
+      "roce": 19.0,
+      "de": 0.22,
+      "opm": 20.0,
+      "beta": 0.72
+    },
+    "Fast Moving Consumer Goods": {
+      "pe": 42.0,
+      "pb": 9.5,
+      "roe": 28.0,
+      "roce": 32.0,
+      "de": 0.12,
+      "opm": 21.0,
+      "beta": 0.65
+    },
+    "Capital Goods": {
+      "pe": 32.0,
+      "pb": 4.1,
+      "roe": 15.0,
+      "roce": 17.5,
+      "de": 0.35,
+      "opm": 12.0,
+      "beta": 1.18
+    },
+    "Oil & Gas": {
+      "pe": 13.5,
+      "pb": 1.6,
+      "roe": 14.5,
+      "roce": 15.0,
+      "de": 0.55,
+      "opm": 14.0,
+      "beta": 0.95
+    },
+    "Metals & Mining": {
+      "pe": 11.0,
+      "pb": 1.4,
+      "roe": 13.0,
+      "roce": 14.5,
+      "de": 0.65,
+      "opm": 16.0,
+      "beta": 1.35
+    },
+    "Default": {
+      "pe": 22.0,
+      "pb": 3.0,
+      "roe": 16.0,
+      "roce": 18.0,
+      "de": 0.4,
+      "opm": 16.0,
+      "beta": 1.0
+    }
+  }
+}

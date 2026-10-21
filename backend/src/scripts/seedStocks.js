@@ -40,6 +40,7 @@ async function seedStockUniverse() {
         debtToEquity: item.debtToEquity ?? null,
         dividendYield: item.dividendYield ?? null,
         deliveryPct: item.deliveryPct ?? null,
+        aliases: item.aliases || [],
         isNSE: true,
         lastUpdated: new Date(),
       };
