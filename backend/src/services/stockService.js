@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const axios = require('axios');
 const NodeCache = require('node-cache');
 const logger = require('../utils/logger');
@@ -14,7 +15,7 @@ const AXIOS_HEADERS = {
   'Accept': 'application/json',
 };
 
-// In-memory lookup map for all 500+ NSE stocks as fallback
+// In-memory lookup map for all 770+ NSE stocks
 const STOCKS_MAP = {};
 INDIAN_STOCKS_UNIVERSE.forEach((item) => {
   const clean = item.symbol.toUpperCase().replace(/\.NS$|\.BO$/i, '').trim();
@@ -37,68 +38,125 @@ const parseSymbol = (input) => {
   return { clean, nse: `${clean}.NS` };
 };
 
-// Helper to calculate relevance score for search results
-const calculateStockMatchScore = (stock, queryUpper, queryLower) => {
-  const symbol = (stock.symbol || '').toUpperCase();
-  const companyName = (stock.companyName || '').toLowerCase();
+// Helper: Normalize query string (trim whitespace, collapse spaces)
+const normalizeQuery = (q) => {
+  if (!q || typeof q !== 'string') return '';
+  return q.trim().replace(/\s+/g, ' ');
+};
+
+/**
+ * Intelligent 7-Tier Relevance Scoring Algorithm for NSE Indian Stocks
+ * 1. Exact Symbol Match (1000 pts)
+ * 2. Exact Company Name Match (900 pts)
+ * 3. Exact Alias Match (850 pts) e.g. "HDFC" -> HDFCBANK, "SBI" -> SBIN, "L&T" -> LT
+ * 4. Symbol Starts With Query (800-840 pts) e.g. "ELECON" for "ELEC"
+ * 5. Company Name Starts With Query (750 pts) e.g. "Tata Consult" for "Tata Consultancy Services"
+ * 6. Alias Starts With Query (700 pts)
+ * 7. Word in Company Name Starts With Query (500 pts) e.g. "Heavy" for "Bharat Heavy Electricals"
+ * 8. Symbol Substring Match (400 pts)
+ * 9. Company Name Substring Match (300 pts)
+ * 10. Alias Substring Match (250 pts)
+ * 11. Sector/Industry Prefix Match (150/140 pts)
+ * 12. Sector/Industry Substring Match (80/70 pts)
+ * + Market Cap weighting tie-breaker (max 25 pts)
+ */
+const calculateStockMatchScore = (stock, rawQuery) => {
+  const qClean = normalizeQuery(rawQuery);
+  if (!qClean) return { score: 0, matchType: 'none' };
+
+  const qUpper = qClean.toUpperCase();
+  const qLower = qClean.toLowerCase();
+  const qAlphaNumUpper = qUpper.replace(/[^A-Z0-9]/g, '');
+  const qAlphaNumLower = qLower.replace(/[^a-z0-9]/g, '');
+
+  const symbol = (stock.symbol || '').toUpperCase().trim();
+  const symbolAlphaNum = symbol.replace(/[^A-Z0-9]/g, '');
+  const companyName = (stock.companyName || '').trim();
+  const companyNameLower = companyName.toLowerCase();
   const sector = (stock.sector || '').toLowerCase();
   const industry = (stock.industry || '').toLowerCase();
+  const aliases = Array.isArray(stock.aliases) && stock.aliases.length > 0
+    ? stock.aliases
+    : [symbol, companyName];
 
   let score = 0;
   let matchType = 'other';
 
   // 1. Exact Symbol Match (Highest priority)
-  if (symbol === queryUpper) {
+  if (symbol === qUpper || (symbolAlphaNum && symbolAlphaNum === qAlphaNumUpper && qAlphaNumUpper.length >= 2)) {
     score = 1000;
     matchType = 'symbol_exact';
   }
-  // 2. Symbol Starts With Query (e.g. ELECON for ELEC)
-  else if (symbol.startsWith(queryUpper)) {
-    score = 800;
+  // 2. Exact Company Name Match
+  else if (companyNameLower === qLower) {
+    score = 900;
+    matchType = 'name_exact';
+  }
+  // 3. Exact Alias Match (e.g. searching "HDFC" matches HDFCBANK, "SBI" matches SBIN, "L&T" matches LT)
+  else if (aliases.some(a => {
+    const aLower = a.toLowerCase().trim();
+    const aAlphaNum = aLower.replace(/[^a-z0-9]/g, '');
+    return aLower === qLower || (aAlphaNum && aAlphaNum === qAlphaNumLower && qAlphaNumLower.length >= 2);
+  })) {
+    score = 850;
+    matchType = 'alias_exact';
+  }
+  // 4. Symbol Starts With Query (Prefix match, e.g. "TCS", "ELECON" for "ELEC")
+  else if (symbol.startsWith(qUpper)) {
+    const lengthRatio = qUpper.length / symbol.length;
+    score = 800 + Math.round(lengthRatio * 40);
     matchType = 'symbol_prefix';
   }
-  // 3. Symbol Contains Query (e.g. ORIENTELEC for ELEC)
-  else if (symbol.includes(queryUpper)) {
-    score = 500;
-    matchType = 'symbol_match';
-  }
-  // 4. Company Name Starts With Query
-  else if (companyName.startsWith(queryLower)) {
-    score = 400;
+  // 5. Company Name Starts With Query (e.g. "Tata Consult" for "Tata Consultancy Services")
+  else if (companyNameLower.startsWith(qLower)) {
+    score = 750;
     matchType = 'name_prefix';
   }
-  // 5. Word in Company Name Starts With Query (e.g. "Bharat Heavy Electricals" for "ELEC")
-  else if (companyName.split(/\s+/).some((w) => w.startsWith(queryLower))) {
-    score = 300;
+  // 6. Alias Starts With Query (e.g. "Tata Motors" prefix)
+  else if (aliases.some(a => a.toLowerCase().startsWith(qLower))) {
+    score = 700;
+    matchType = 'alias_prefix';
+  }
+  // 7. Word in Company Name Starts With Query (e.g. "Heavy" for "Bharat Heavy Electricals")
+  else if (companyNameLower.split(/[\s,.-]+/).some((w) => w.startsWith(qLower) && w.length >= qLower.length)) {
+    score = 500;
     matchType = 'name_word_match';
   }
-  // 6. Company Name Contains Query
-  else if (companyName.includes(queryLower)) {
-    score = 200;
+  // 8. Symbol Contains Query (Substring match, e.g. "ORIENTELEC" for "ELEC")
+  else if (symbol.includes(qUpper)) {
+    score = 400;
+    matchType = 'symbol_match';
+  }
+  // 9. Company Name Contains Query (Partial name match)
+  else if (companyNameLower.includes(qLower)) {
+    score = 300;
     matchType = 'name_match';
   }
-  // 7. Sector Starts With Query (e.g. TELECOM for TELECOM)
-  else if (sector.startsWith(queryLower)) {
-    score = 120;
+  // 10. Alias Contains Query
+  else if (aliases.some(a => a.toLowerCase().includes(qLower))) {
+    score = 250;
+    matchType = 'alias_match';
+  }
+  // 11. Sector Starts With Query (e.g. "Bank" for Banking)
+  else if (sector.startsWith(qLower)) {
+    score = 150;
     matchType = 'sector_prefix';
   }
-  // 8. Industry Starts With Query
-  else if (industry.startsWith(queryLower)) {
-    score = 100;
+  // 12. Industry Starts With Query (e.g. "Private" for Private Sector Bank)
+  else if (industry.startsWith(qLower)) {
+    score = 140;
     matchType = 'industry_prefix';
   }
-  // 9. Sector Contains Substring (e.g. ELECO inside Telecommunications)
-  else if (sector.includes(queryLower)) {
-    score = 50;
+  // 13. Sector / Industry Substring Match
+  else if (sector.includes(qLower)) {
+    score = 80;
     matchType = 'sector_match';
-  }
-  // 10. Industry Contains Substring
-  else if (industry.includes(queryLower)) {
-    score = 40;
+  } else if (industry.includes(qLower)) {
+    score = 70;
     matchType = 'industry_match';
   }
 
-  // Market cap weighting bonus (only if there was a genuine match)
+  // Market cap weighting bonus (only if there was a genuine match, max 25 pts)
   if (score > 0) {
     const mCapCr = stock.marketCap || 0;
     const mCapBonus = Math.min(25, (mCapCr / 100000) * 5);
@@ -108,12 +166,14 @@ const calculateStockMatchScore = (stock, queryUpper, queryLower) => {
   return { score, matchType };
 };
 
-// 1. Search Stock Symbols Across 500+ NSE Listed Companies
+// 1. Search Stock Symbols Across 770+ NSE Listed Companies
 const searchStocks = async (query) => {
-  if (!query || query.trim().length === 0) return [];
-  const q = query.toUpperCase().trim();
-  const qLower = query.toLowerCase().trim();
-  const cacheKey = `search_${q}`;
+  const qClean = normalizeQuery(query);
+  if (!qClean || qClean.length === 0) return [];
+  
+  // Bound max query length to 100
+  const qBounded = qClean.slice(0, 100);
+  const cacheKey = `search_${qBounded.toUpperCase()}`;
 
   const cached = stockCache.get(cacheKey);
   if (cached) {
@@ -123,9 +183,9 @@ const searchStocks = async (query) => {
 
   const matchesMap = new Map();
 
-  // 1. Search in in-memory stock universe first (instant & comprehensive 500+ NSE universe)
+  // 1. Search in in-memory stock universe first (instant & comprehensive 770+ NSE universe)
   INDIAN_STOCKS_UNIVERSE.forEach((item) => {
-    const { score, matchType } = calculateStockMatchScore(item, q, qLower);
+    const { score, matchType } = calculateStockMatchScore(item, qBounded);
     if (score > 0) {
       matchesMap.set(item.symbol, {
         symbol: item.symbol,
@@ -146,76 +206,47 @@ const searchStocks = async (query) => {
     }
   });
 
-  // 2. Query MongoDB for any additional or updated stock docs
-  try {
-    const mongoDocs = await Stock.find({
-      $or: [
-        { symbol: { $regex: q, $options: 'i' } },
-        { companyName: { $regex: qLower, $options: 'i' } },
-        { sector: { $regex: qLower, $options: 'i' } },
-        { industry: { $regex: qLower, $options: 'i' } },
-      ],
-    }).limit(40).lean();
+  // 2. Query MongoDB ONLY if connected (avoids 10-second buffer timeouts when offline/testing)
+  if (mongoose.connection && mongoose.connection.readyState === 1) {
+    try {
+      const escapedQuery = qBounded.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const mongoDocs = await Stock.find({
+        $or: [
+          { symbol: { $regex: escapedQuery, $options: 'i' } },
+          { companyName: { $regex: escapedQuery, $options: 'i' } },
+          { aliases: { $regex: escapedQuery, $options: 'i' } },
+          { sector: { $regex: escapedQuery, $options: 'i' } },
+          { industry: { $regex: escapedQuery, $options: 'i' } },
+        ],
+      }).limit(40).lean();
 
-    if (mongoDocs && mongoDocs.length > 0) {
-      mongoDocs.forEach((doc) => {
-        const { score, matchType } = calculateStockMatchScore(doc, q, qLower);
-        if (score > 0) {
-          const existing = matchesMap.get(doc.symbol);
-          matchesMap.set(doc.symbol, {
-            symbol: doc.symbol,
-            companyName: doc.companyName || existing?.companyName || `${doc.symbol} Limited`,
-            exchange: 'NSE',
-            currency: 'INR',
-            sector: doc.sector || existing?.sector || 'Equities',
-            industry: doc.industry || existing?.industry || 'Diversified',
-            marketCapCategory: doc.marketCapCategory || existing?.marketCapCategory || 'Large Cap',
-            marketCap: doc.marketCap || existing?.marketCap || null,
-            price: doc.price ?? existing?.price ?? null,
-            peRatio: doc.peRatio ?? existing?.peRatio ?? null,
-            bookValue: doc.bookValue || existing?.bookValue || null,
-            lastUpdated: doc.lastUpdated || doc.updatedAt || new Date().toISOString(),
-            score: Math.max(score, existing?.score || 0),
-            matchType: existing?.matchType || matchType,
-          });
-        }
-      });
-    }
-  } catch (mongoErr) {
-    logger.warn({ err: mongoErr.message }, 'MongoDB stock search query failed, using in-memory stock universe');
-  }
-
-  // 3. Attempt Yahoo Finance search augment if needed
-  try {
-    const url = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(q)}&quotesCount=10&newsCount=0`;
-    const res = await axios.get(url, { headers: AXIOS_HEADERS, timeout: 2000 });
-    if (res.data && res.data.quotes && Array.isArray(res.data.quotes)) {
-      res.data.quotes
-        .filter((item) => item.symbol && (item.symbol.endsWith('.NS') || item.symbol.endsWith('.BO') || item.exchDisp === 'NSE'))
-        .forEach((item) => {
-          const { clean } = parseSymbol(item.symbol);
-          const stockInfo = STOCKS_MAP[clean] || {};
-          const candidate = {
-            symbol: clean,
-            companyName: item.longname || item.shortname || stockInfo.companyName || `${clean} Limited`,
-            exchange: 'NSE',
-            currency: 'INR',
-            sector: stockInfo.sector || 'Equities',
-            industry: stockInfo.industry || 'Diversified',
-            marketCapCategory: stockInfo.marketCapCategory || 'Large Cap',
-            marketCap: stockInfo.marketCap || null,
-            price: stockInfo.price || null,
-            peRatio: stockInfo.peRatio || null,
-            lastUpdated: new Date().toISOString(),
-          };
-          const { score, matchType } = calculateStockMatchScore(candidate, q, qLower);
-          if (!matchesMap.has(clean)) {
-            matchesMap.set(clean, { ...candidate, score: score || 50, matchType });
+      if (mongoDocs && mongoDocs.length > 0) {
+        mongoDocs.forEach((doc) => {
+          const { score, matchType } = calculateStockMatchScore(doc, qBounded);
+          if (score > 0) {
+            const existing = matchesMap.get(doc.symbol);
+            matchesMap.set(doc.symbol, {
+              symbol: doc.symbol,
+              companyName: doc.companyName || existing?.companyName || `${doc.symbol} Limited`,
+              exchange: 'NSE',
+              currency: 'INR',
+              sector: doc.sector || existing?.sector || 'Equities',
+              industry: doc.industry || existing?.industry || 'Diversified',
+              marketCapCategory: doc.marketCapCategory || existing?.marketCapCategory || 'Large Cap',
+              marketCap: doc.marketCap || existing?.marketCap || null,
+              price: doc.price ?? existing?.price ?? null,
+              peRatio: doc.peRatio ?? existing?.peRatio ?? null,
+              bookValue: doc.bookValue || existing?.bookValue || null,
+              lastUpdated: doc.lastUpdated || doc.updatedAt || new Date().toISOString(),
+              score: Math.max(score, existing?.score || 0),
+              matchType: existing?.matchType || matchType,
+            });
           }
         });
+      }
+    } catch (mongoErr) {
+      logger.warn({ err: mongoErr.message }, 'MongoDB stock search query failed, using in-memory universe');
     }
-  } catch (err) {
-    logger.warn({ err: err.message }, `External Yahoo search failed for '${q}'`);
   }
 
   // Sort by score descending, then by marketCap descending
@@ -226,6 +257,7 @@ const searchStocks = async (query) => {
     })
     .slice(0, 20);
 
+  // If no matching stock, return empty array (NEVER substitute Reliance or a default stock)
   stockCache.set(cacheKey, sortedResults, 600);
   return sortedResults;
 };
@@ -264,43 +296,60 @@ const getStockQuote = async (symbolInput) => {
   let stockMaster = null;
   let latestMarketDoc = null;
 
-  // 1. Fetch Stock Master from MongoDB
-  try {
-    stockMaster = await Stock.findOne({ symbol: clean }).lean();
-  } catch (err) {
-    logger.warn({ err: err.message }, `MongoDB Stock Master lookup failed for ${clean}`);
+  // 1. Fetch Stock Master from MongoDB if connected
+  if (mongoose.connection && mongoose.connection.readyState === 1) {
+    try {
+      stockMaster = await Stock.findOne({ symbol: clean }).lean();
+    } catch (err) {
+      logger.warn({ err: err.message }, `MongoDB Stock Master lookup failed for ${clean}`);
+    }
   }
 
+  // 2. Fallback to in-memory master universe
   if (!stockMaster) {
-    stockMaster = STOCKS_MAP[clean] || {
-      symbol: clean,
-      companyName: `${clean} Limited`,
-      exchange: 'NSE',
-      sector: 'Equities',
-      industry: 'Diversified',
-      marketCapCategory: 'Large Cap',
-    };
+    stockMaster = STOCKS_MAP[clean];
   }
 
-  // 2. Fetch Latest Daily Market Data from MongoDB (StockMarketData)
-  try {
-    latestMarketDoc = await StockMarketData.findOne({ symbol: clean }).sort({ date: -1 }).lean();
-  } catch (err) {
-    logger.warn({ err: err.message }, `MongoDB StockMarketData lookup failed for ${clean}`);
+  // 3. Search by alias if clean doesn't match symbol directly
+  if (!stockMaster) {
+    for (const st of Object.values(STOCKS_MAP)) {
+      if (st.aliases && st.aliases.some(a => a.toUpperCase() === clean || a.toLowerCase() === clean.toLowerCase())) {
+        stockMaster = st;
+        break;
+      }
+    }
   }
 
-  // 3. On-demand fetch if no market data stored in DB yet
+  // 4. If still not found, throw a 404 error (never default to Reliance or an unknown ticker)
+  if (!stockMaster) {
+    const notFoundError = new Error(`Stock symbol "${clean}" not found in NSE universe`);
+    notFoundError.statusCode = 404;
+    notFoundError.code = 'NOT_FOUND';
+    throw notFoundError;
+  }
+
+  // 5. Fetch Latest Daily Market Data from MongoDB (StockMarketData) if connected
+  if (mongoose.connection && mongoose.connection.readyState === 1) {
+    try {
+      latestMarketDoc = await StockMarketData.findOne({ symbol: clean }).sort({ date: -1 }).lean();
+    } catch (err) {
+      logger.warn({ err: err.message }, `MongoDB StockMarketData lookup failed for ${clean}`);
+    }
+  }
+
+  // 6. On-demand fetch if no market data stored in DB yet
   if (!latestMarketDoc) {
     try {
       const fetched = await fetchLatestMarketData(clean);
       if (fetched) {
         latestMarketDoc = fetched;
-        // Save to DB asynchronously for future queries
-        StockMarketData.updateOne(
-          { symbol: fetched.symbol, date: fetched.date },
-          { $set: fetched },
-          { upsert: true }
-        ).catch((e) => logger.warn(`Failed async upsert for ${clean}: ${e.message}`));
+        if (mongoose.connection && mongoose.connection.readyState === 1) {
+          StockMarketData.updateOne(
+            { symbol: fetched.symbol, date: fetched.date },
+            { $set: fetched },
+            { upsert: true }
+          ).catch((e) => logger.warn(`Failed async upsert for ${clean}: ${e.message}`));
+        }
       }
     } catch (err) {
       logger.warn({ err: err.message }, `On-demand live market data fetch failed for ${clean}`);
@@ -438,7 +487,7 @@ const getStockHistory = async (symbolInput, range = '1M') => {
   }
 
   // If external fetch failed, query MongoDB StockMarketData for genuine historical records
-  if (historySeries.length === 0) {
+  if (historySeries.length === 0 && mongoose.connection && mongoose.connection.readyState === 1) {
     try {
       const dbRecords = await StockMarketData.find({ symbol: clean })
         .sort({ date: 1 })

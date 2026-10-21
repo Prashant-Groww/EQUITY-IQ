@@ -42,6 +42,11 @@ const StockSchema = new mongoose.Schema(
       default: true,
       index: true,
     },
+    aliases: [{
+      type: String,
+      trim: true,
+      index: true,
+    }],
     marketCapCategory: {
       type: String,
       default: 'Large Cap',
@@ -137,6 +142,7 @@ const StockSchema = new mongoose.Schema(
 StockSchema.index({
   symbol: 'text',
   companyName: 'text',
+  aliases: 'text',
   sector: 'text',
   industry: 'text',
 });

@@ -10,7 +10,9 @@ const searchStocks = async (req, res, next) => {
       return next(error);
     }
 
-    const results = await stockService.searchStocks(q.trim());
+    // Sanitize and limit query length to 100 characters
+    const sanitizedQuery = q.trim().slice(0, 100);
+    const results = await stockService.searchStocks(sanitizedQuery);
     res.status(200).json(results);
   } catch (err) {
     next(err);
@@ -20,14 +22,15 @@ const searchStocks = async (req, res, next) => {
 const getQuote = async (req, res, next) => {
   try {
     const { symbol } = req.params;
-    if (!symbol || symbol.trim().length === 0) {
+    if (!symbol || typeof symbol !== 'string' || symbol.trim().length === 0) {
       const error = new Error('Stock symbol parameter is required');
       error.statusCode = 400;
       error.code = 'INVALID_SYMBOL';
       return next(error);
     }
 
-    const quote = await stockService.getStockQuote(symbol.trim());
+    const cleanSymbol = symbol.trim().slice(0, 20);
+    const quote = await stockService.getStockQuote(cleanSymbol);
     res.status(200).json(quote);
   } catch (err) {
     next(err);
