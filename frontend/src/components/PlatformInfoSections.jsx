@@ -53,7 +53,7 @@ const TECH_STACK = [
   { category: 'AI Service Architecture', items: 'FastAPI (Python 3.11), Pydantic V2, ChromaDB Vector Store' },
   { category: 'Backend API Service', items: 'Node.js Express, Mongoose, Pino Logger, Express Validator' },
   { category: 'Database & Storage', items: 'MongoDB Atlas, ChromaDB Dense Vector Store, Node-Cache TTL' },
-  { category: 'Frontend Interface', items: 'React 18, Vite, Tailwind CSS, Recharts, Lucide Icons' },
+  { category: 'Frontend Interface', items: 'React 18, Vite, Tailwind CSS, Lucide Icons' },
   { category: 'Deployment Stack', items: 'Docker, Docker Compose, Multi-Stage Nginx Alpine Proxy' },
 ];
 

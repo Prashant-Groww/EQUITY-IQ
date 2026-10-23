@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, TrendingUp, TrendingDown, Sparkles, BookOpen, Users } from 'lucide-react';
-import StockChart from './StockChart';
 import FinancialMetrics from './FinancialMetrics';
 import MLRatingWidget from './MLRatingWidget';
 import RiskAnalyticsWidget from './RiskAnalyticsWidget';
@@ -121,16 +120,13 @@ export default function StockDetailsView({ symbol, onBackToSearch, onNavigateToR
       {/* 2. KEY FINANCIAL RATIOS GRID */}
       <FinancialMetrics symbol={symbol} />
 
-      {/* 3. INTERACTIVE PRICE CHART */}
-      <StockChart symbol={symbol} />
-
-      {/* 4. MULTI-FACTOR ML RATING ENGINE */}
+      {/* 3. MULTI-FACTOR ML RATING ENGINE */}
       <MLRatingWidget symbol={symbol} />
 
-      {/* 5. QUANTITATIVE RISK & VOLATILITY MODEL */}
+      {/* 4. QUANTITATIVE RISK & VOLATILITY MODEL */}
       <RiskAnalyticsWidget symbol={symbol} />
 
-      {/* 6. BUSINESS DESCRIPTION & SHAREHOLDING PATTERN */}
+      {/* 5. BUSINESS DESCRIPTION & SHAREHOLDING PATTERN */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Business Description */}
@@ -225,7 +221,7 @@ export default function StockDetailsView({ symbol, onBackToSearch, onNavigateToR
 
       </div>
 
-      {/* 7. DEDICATED RAG RESEARCH WORKSPACE CTA BANNER */}
+      {/* 6. DEDICATED RAG RESEARCH WORKSPACE CTA BANNER */}
       <div className="bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-purple-200 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
         <div className="flex items-center gap-3">
           <div className="p-3 rounded-xl bg-purple-600 text-white shrink-0 shadow-md shadow-purple-600/20">
