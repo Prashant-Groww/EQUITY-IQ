@@ -92,10 +92,32 @@ const getRating = async (req, res, next) => {
   }
 };
 
+
+const getAvailableSectors = async (req, res, next) => {
+  try {
+    const sectors = await stockService.getAvailableSectors();
+    res.status(200).json(sectors);
+  } catch (err) {
+    next(err);
+  }
+};
+
+const getSectorRecommendations = async (req, res, next) => {
+  try {
+    const { sector } = req.query;
+    const recommendations = await stockService.getSectorRecommendations(sector);
+    res.status(200).json(recommendations);
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   searchStocks,
   getQuote,
   getHistory,
   getFinancials,
   getRating,
+  getAvailableSectors,
+  getSectorRecommendations,
 };

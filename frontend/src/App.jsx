@@ -6,6 +6,7 @@ import PlatformInfoSections from './components/PlatformInfoSections';
 import StockDetailsView from './components/StockDetailsView';
 import AIChatCopilotWidget from './components/AIChatCopilotWidget';
 import RAGWorkspace from './components/RAGWorkspace';
+import SectorRecommendationsWidget from './components/SectorRecommendationsWidget';
 
 const DEFAULT_MARKET_INDICES = [
   { name: 'NIFTY 50', value: '23,346.40', change: '+128.80', percent: '+0.55%', isUp: true, isLive: true },
@@ -22,6 +23,9 @@ const getInitialRouteState = () => {
   if (path.startsWith('/stock/')) {
     const sym = path.replace('/stock/', '').toUpperCase().trim();
     return { tab: 'STOCK_DETAILS', symbol: sym || null };
+  }
+  if (path === '/recommendations' || path.startsWith('/recommendations')) {
+    return { tab: 'RECOMMENDATIONS', symbol: null };
   }
   if (path === '/rag' || path.startsWith('/rag')) {
     const sym = searchParams.get('symbol');
@@ -47,6 +51,8 @@ export default function App() {
     let newPath = '/';
     if (tab === 'STOCK_DETAILS' && symbol) {
       newPath = `/stock/${symbol}`;
+    } else if (tab === 'RECOMMENDATIONS') {
+      newPath = '/recommendations';
     } else if (tab === 'RAG') {
       newPath = symbol ? `/rag?symbol=${symbol}` : '/rag';
     }
@@ -201,6 +207,17 @@ export default function App() {
               <Search className="h-4 w-4" />
               Stock Search
             </button>
+            <button
+              onClick={() => navigateTo('RECOMMENDATIONS')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                activeTab === 'RECOMMENDATIONS'
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              <Award className="h-4 w-4 text-emerald-600" />
+              AI Recommendations
+            </button>
 
             {activeTab === 'STOCK_DETAILS' && (
               <button
@@ -284,7 +301,7 @@ export default function App() {
 
               {/* Feature 2 Card */}
               <div 
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                onClick={() => navigateTo('RECOMMENDATIONS')}
                 className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:border-emerald-500 hover:shadow-md transition cursor-pointer flex flex-col justify-between gap-4 group"
               >
                 <div className="flex items-center justify-between">
@@ -328,9 +345,25 @@ export default function App() {
 
             </section>
 
-            {/* 3. Platform Overview & Tech Stack */}
+            {/* 3. AI Sector Recommendations (Top 5 Stocks per Sector) */}
+            <SectorRecommendationsWidget 
+              onSelectSymbol={handleSelectSymbol} 
+              onNavigateToRAG={handleNavigateToRAG} 
+            />
+
+            {/* 4. Platform Overview & Tech Stack */}
             <PlatformInfoSections />
 
+          </div>
+        )}
+
+        {/* VIEW: DEDICATED SECTOR RECOMMENDATIONS PAGE */}
+        {activeTab === 'RECOMMENDATIONS' && (
+          <div className="flex flex-col gap-6 animate-fade-in">
+            <SectorRecommendationsWidget
+              onSelectSymbol={handleSelectSymbol}
+              onNavigateToRAG={handleNavigateToRAG}
+            />
           </div>
         )}
 

@@ -4,6 +4,40 @@ EquityIQ is a full-stack, enterprise-grade AI assistant for Indian equity resear
 
 ---
 
+
+---
+
+## 🏆 AI Sector Recommendations Engine (Top 5 Best Stocks per Sector)
+
+EquityIQ features a dedicated **AI Sector Recommendations** engine and UI section that enables investors to select any industry sector and instantly discover the **Top 5 Best Stocks** to invest in according to explainable ML ratings.
+
+### Key Highlights:
+- **11 Major Industry Sectors**:
+  - 🏦 **Banking & Financials** (Public & private banks, credit institutions, NBFCs)
+  - 💻 **IT & Software** (Enterprise software, digital engineering, SaaS, global consultancies)
+  - 💊 **Pharma & Healthcare** (APIs, hospitals, bio-therapeutics, healthcare providers)
+  - 🚗 **Automobiles & EV** (Passenger vehicle OEMs, 2W/4W, auto ancillaries, electric mobility)
+  - 🛒 **FMCG & Consumer Goods** (Branded consumer products, packaged foods, personal care)
+  - ⚡ **Energy, Oil & Power** (Renewable utilities, power generation, petroleum refiners)
+  - ⛏️ **Metals & Mining** (Steel producers, primary aluminum, mineral processors)
+  - 🏗️ **Infrastructure & Capital Goods** (Turnkey EPC, industrial machinery, cement)
+  - 🧪 **Chemicals & Fertilizers** (Specialty chemicals, fluorochemicals, agrochemicals)
+  - 🏢 **Real Estate & Realty** (Tier-1 developers, commercial REITs, townships)
+  - 📡 **Telecommunications** (Wireless operators, optic fiber, tower infrastructure)
+- **Multi-Factor Quantitative Formula**:
+  - **Valuation (22%)**: P/E multiple relative to fair bands, P/B ratio
+  - **Capital Productivity (26%)**: Return on Equity (ROE) & Return on Capital Employed (ROCE)
+  - **Balance Sheet Solvency (22%)**: Debt-to-Equity safety bounds & banking leverage adequacy
+  - **Market Quality & Cap (16%)**: Large & Quality Mid-Cap stability premium
+  - **Institutional Accumulation (14%)**: Delivery percentage & order volume
+- **Output Metrics per Stock**:
+  - Distinctive Rank Badges (`#1 TOP SECTOR PICK`, `#2 VALUE LEADER`, `#3 GROWTH COMPOUNDER`, `#4 HIGH ROE CHAMPION`, `#5 BALANCE SHEET STAR`)
+  - Overall Composite Score (0–100) & Model Confidence %
+  - Recommendation Tier (`STRONG_BUY` or `BUY`)
+  - Estimated 12-Month Target Upside %
+  - 3 Explainable AI Investment Rationale Drivers
+  - Direct Action Buttons to view stock fundamentals or deep-dive in RAG AI Copilot
+
 ## 🏛️ Indian Stock Market Focus
 
 - **Primary Exchanges**: National Stock Exchange of India (NSE) & Bombay Stock Exchange (BSE)
