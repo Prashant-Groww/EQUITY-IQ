@@ -26,7 +26,7 @@ const generateEquityResearchBrief = async (symbolInput) => {
       rag_context: `Latest corporate filings for ${cleanSymbol} confirm stable operating cash flows and strong revenue expansion in core markets.`,
     };
 
-    const res = await axios.post(`${AI_SERVICE_URL}/predict/research-brief`, payload);
+    const res = await axios.post(`new URL('/predict/research-brief', AI_SERVICE_URL).toString()`, payload);
     briefData = res.data;
   } catch (err) {
     logger.warn({ err: err.message }, 'FastAPI AI Brief Generation failed, constructing fallback research brief');

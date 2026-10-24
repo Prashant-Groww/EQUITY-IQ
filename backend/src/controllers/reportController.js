@@ -47,7 +47,7 @@ const uploadAndAnalyzeReport = async (req, res, next) => {
     let aiResult = null;
     try {
       const response = await axios.post(
-        `${AI_SERVICE_URL}/predict/summarize-report`,
+        `new URL('/predict/summarize-report', AI_SERVICE_URL).toString()`,
         {
           symbol: cleanSym,
           title: reportTitle,

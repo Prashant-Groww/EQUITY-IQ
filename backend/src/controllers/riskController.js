@@ -25,7 +25,7 @@ const getStockRisk = async (req, res, next) => {
     // 2. Call FastAPI ML Risk Analytics engine
     try {
       const response = await axios.post(
-        `${AI_SERVICE_URL}/predict/risk`,
+        `new URL('/predict/risk', AI_SERVICE_URL).toString()`,
         { symbol: cleanSym, prices: pricesList },
         { timeout: 3000 }
       );
@@ -69,7 +69,7 @@ const predictRiskDirect = async (req, res, next) => {
       return next(error);
     }
 
-    const response = await axios.post(`${AI_SERVICE_URL}/predict/risk`, { symbol, prices }, { timeout: 3000 });
+    const response = await axios.post(`new URL('/predict/risk', AI_SERVICE_URL).toString()`, { symbol, prices }, { timeout: 3000 });
     res.status(200).json(response.data);
   } catch (err) {
     next(err);

@@ -619,7 +619,7 @@ const getStockRating = async (symbolInput) => {
   };
 
   try {
-    const res = await axios.post(`${AI_SERVICE_URL}/predict/rating`, payload, { timeout: 3500 });
+    const res = await axios.post(`new URL('/predict/rating', AI_SERVICE_URL).toString()`, payload, { timeout: 3500 });
     if (res.data) {
       ratingResponse = res.data;
     }

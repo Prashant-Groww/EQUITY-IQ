@@ -196,7 +196,7 @@ const optimizePortfolioWithAI = async (userId, guestId) => {
   }));
 
   try {
-    const response = await axios.post(`${AI_SERVICE_URL}/predict/portfolio-optimize`, {
+    const response = await axios.post(`new URL('/predict/portfolio-optimize', AI_SERVICE_URL).toString()`, {
       holdings: holdingsPayload,
     });
     return response.data;

@@ -52,6 +52,22 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// AI Service Health Check Endpoint (resolves internal AI_SERVICE_URL binding)
+app.get('/api/health/ai', async (req, res) => {
+  try {
+    const aiBase = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+    const targetUrl = new URL('/health', aiBase).toString();
+    const response = await axios.get(targetUrl, { timeout: 3000 });
+    return res.status(response.status).json(response.data);
+  } catch (err) {
+    return res.status(503).json({
+      status: 'offline',
+      service: 'ai-service',
+      message: err.message,
+    });
+  }
+});
+
 // 404 Route Handler
 app.use((req, res, next) => {
   const error = new Error(`Route Not Found - ${req.originalUrl}`);

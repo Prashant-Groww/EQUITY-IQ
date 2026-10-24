@@ -83,7 +83,7 @@ export default function App() {
     }
 
     try {
-      const res = await fetch('http://localhost:8000/health');
+      const res = await fetch('/api/health/ai');
       if (res.ok) {
         setAiStatus({ loading: false, online: true });
       }

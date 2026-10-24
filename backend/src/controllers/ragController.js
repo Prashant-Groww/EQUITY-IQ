@@ -95,7 +95,7 @@ const queryRAG = async (req, res, next) => {
     // 2. Call FastAPI AI RAG Service
     try {
       const response = await axios.post(
-        `${AI_SERVICE_URL}/predict/rag-query`,
+        `new URL('/predict/rag-query', AI_SERVICE_URL).toString()`,
         {
           symbol: cleanSym,
           query: query.trim(),
