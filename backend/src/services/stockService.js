@@ -7,8 +7,9 @@ const StockMarketData = require('../models/StockMarketData');
 const { fetchLatestMarketData } = require('./marketDataFetcher');
 const { INDIAN_STOCKS_UNIVERSE } = require('../data/indianStocksUniverse');
 
-// In-memory TTL cache (300 seconds = 5 minutes)
+// In-memory TTL cache for search (300 seconds) and live stock quotes (10 seconds)
 const stockCache = new NodeCache({ stdTTL: 300, checkperiod: 60 });
+const quoteCache = new NodeCache({ stdTTL: 10, checkperiod: 5 });
 
 const AXIOS_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -287,9 +288,9 @@ const getStockQuote = async (symbolInput) => {
   }
 
   const cacheKey = `quote_${clean}`;
-  const cached = stockCache.get(cacheKey);
+  const cached = quoteCache.get(cacheKey);
   if (cached) {
-    logger.info(`[CACHE HIT] key=${cacheKey}`);
+    logger.info(`[10S QUOTE CACHE HIT] key=${cacheKey}`);
     return cached;
   }
 
@@ -305,7 +306,7 @@ const getStockQuote = async (symbolInput) => {
     }
   }
 
-  // 2. Fallback to in-memory master universe
+  // 2. Fallback to in-memory master universe (2600+ NSE stocks)
   if (!stockMaster) {
     stockMaster = STOCKS_MAP[clean];
   }
@@ -320,7 +321,7 @@ const getStockQuote = async (symbolInput) => {
     }
   }
 
-  // 4. If still not found, throw a 404 error (never default to Reliance or an unknown ticker)
+  // 4. If still not found, throw a 404 error
   if (!stockMaster) {
     const notFoundError = new Error(`Stock symbol "${clean}" not found in NSE universe`);
     notFoundError.statusCode = 404;
@@ -328,31 +329,35 @@ const getStockQuote = async (symbolInput) => {
     throw notFoundError;
   }
 
-  // 5. Fetch Latest Daily Market Data from MongoDB (StockMarketData) if connected
-  if (mongoose.connection && mongoose.connection.readyState === 1) {
+  // 5. Always attempt live real-time fetch from exchange (Yahoo Finance .NS/.BO)
+  let isRealLive = false;
+  try {
+    const fetched = await fetchLatestMarketData(clean);
+    if (fetched) {
+      latestMarketDoc = fetched;
+      isRealLive = true;
+      // Sync live price to in-memory stock map so ratios use fresh price
+      if (STOCKS_MAP[clean]) {
+        STOCKS_MAP[clean].price = fetched.close;
+      }
+      if (mongoose.connection && mongoose.connection.readyState === 1) {
+        StockMarketData.updateOne(
+          { symbol: fetched.symbol, date: fetched.date },
+          { $set: fetched },
+          { upsert: true }
+        ).catch((e) => logger.warn(`Failed async upsert for ${clean}: ${e.message}`));
+      }
+    }
+  } catch (err) {
+    logger.warn({ err: err.message }, `Live market fetch failed for ${clean}`);
+  }
+
+  // Fallback to MongoDB latest record if live fetch did not succeed
+  if (!latestMarketDoc && mongoose.connection && mongoose.connection.readyState === 1) {
     try {
       latestMarketDoc = await StockMarketData.findOne({ symbol: clean }).sort({ date: -1 }).lean();
     } catch (err) {
       logger.warn({ err: err.message }, `MongoDB StockMarketData lookup failed for ${clean}`);
-    }
-  }
-
-  // 6. On-demand fetch if no market data stored in DB yet
-  if (!latestMarketDoc) {
-    try {
-      const fetched = await fetchLatestMarketData(clean);
-      if (fetched) {
-        latestMarketDoc = fetched;
-        if (mongoose.connection && mongoose.connection.readyState === 1) {
-          StockMarketData.updateOne(
-            { symbol: fetched.symbol, date: fetched.date },
-            { $set: fetched },
-            { upsert: true }
-          ).catch((e) => logger.warn(`Failed async upsert for ${clean}: ${e.message}`));
-        }
-      }
-    } catch (err) {
-      logger.warn({ err: err.message }, `On-demand live market data fetch failed for ${clean}`);
     }
   }
 
@@ -407,7 +412,9 @@ const getStockQuote = async (symbolInput) => {
     statusMessage: price == null ? 'Latest market data unavailable.' : null,
   };
 
-  stockCache.set(cacheKey, quoteData, 300);
+  quoteData.isLiveFeed = isRealLive;
+  quoteData.pollingIntervalSeconds = 10;
+  quoteCache.set(cacheKey, quoteData, 10);
   return quoteData;
 };
 

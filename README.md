@@ -7,7 +7,7 @@ EquityIQ is a full-stack, enterprise-grade AI assistant for Indian equity resear
 ## 🏛️ Indian Stock Market Focus
 
 - **Primary Exchanges**: National Stock Exchange of India (NSE) & Bombay Stock Exchange (BSE)
-- **Supported Tickers**: 769+ authentic NSE-listed equities covering Nifty 50, Nifty Next 50, Nifty Midcap 150, and Nifty Smallcap 250 (TCS, RELIANCE, INFY, HDFCBANK, ICICIBANK, SBIN, LT, BHARTIARTL, ITC, AXISBANK, ASIANPAINT, MARUTI, TATAMOTORS, SUNPHARMA, WIPRO, HCLTECH, ADANIENT, ELECON, BHEL, etc.).
+- **Supported Tickers**: 2,600+ authentic NSE-listed equities (All listed shares on the National Stock Exchange of India) covering Nifty 50, Nifty Next 50, Nifty Midcap 150, and Nifty Smallcap 250 (TCS, RELIANCE, INFY, HDFCBANK, ICICIBANK, SBIN, LT, BHARTIARTL, ITC, AXISBANK, ASIANPAINT, MARUTI, TATAMOTORS, SUNPHARMA, WIPRO, HCLTECH, ADANIENT, ELECON, BHEL, etc.).
 - **Currency & Financial Notation**: Indian Rupee (₹ INR), Lakhs (L), and Crores (Cr)
 - **Benchmark Index**: Nifty 50 (Risk Beta & Relative Market Performance)
 
@@ -15,7 +15,7 @@ EquityIQ is a full-stack, enterprise-grade AI assistant for Indian equity resear
 
 ## 🔍 Upgraded Stock Search Engine
 
-The stock search system has been upgraded to deliver fast, accurate, and intelligent company discovery across 769+ NSE equities without relying on external APIs or small hardcoded lists.
+The stock search system has been upgraded to deliver fast, accurate, and intelligent company discovery across all 2,600+ NSE equities without relying on external APIs or small hardcoded lists.
 
 ### 1. 7-Tier Relevance Ranking Algorithm
 Query matching executes sequentially through prioritized relevance tiers to ensure exact matches rank first:
@@ -140,3 +140,36 @@ cd frontend
 npm run build
 ```
 Compiles Vite production assets cleanly with 0 syntax or bundle errors.
+
+---
+
+## 🚀 Deploying on Vercel (Full-Stack Setup)
+
+EquityIQ is pre-configured for **1-click full-stack deployment on Vercel**:
+
+### 1. Project Structure for Vercel
+- **Frontend**: Built via Vite into `frontend/dist`.
+- **API Backend**: Handled by Vercel Serverless Functions via `api/index.js` forwarding to `backend/src/app.js`.
+- **Configuration**: Managed automatically via `vercel.json`.
+
+### 2. Deployment Steps
+1. Push your repository to GitHub.
+2. In the [Vercel Dashboard](https://vercel.com/new), select your `EQUITY-IQ` repository.
+3. Keep default settings:
+   - **Framework Preset**: Vite / Other
+   - **Build Command**: `npm --prefix frontend install && npm --prefix frontend run build`
+   - **Output Directory**: `frontend/dist`
+4. Add the following **Environment Variables** in Vercel project settings:
+   - `MONGO_URI`: Your MongoDB Atlas connection string (optional; in-memory universe operates if omitted)
+   - `JWT_SECRET`: Secret key for authentication tokens
+   - `NODE_ENV`: `production`
+5. Click **Deploy**. Vercel will build both the frontend and the serverless API routes under `/api/*`.
+
+---
+
+## ⏱️ 10-Second Real-Time Live Auto-Polling
+
+EquityIQ features a real-time market data synchronization engine:
+- **Client Auto-Sync**: The stock details view polls `/api/stocks/:symbol/quote` every 10 seconds silently in the background.
+- **Live Visual Feedback**: Includes an animated pulsing radar dot (`LIVE • 10s Auto-Sync`), real-time price tick transitions (emerald for upticks, rose for downticks), and a force-refresh trigger.
+- **Market Indices Strip**: Real-time polling every 10 seconds for NIFTY 50, SENSEX, NIFTY BANK, NIFTY IT, and NIFTY MIDCAP 100.

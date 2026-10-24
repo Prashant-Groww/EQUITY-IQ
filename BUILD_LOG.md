@@ -487,3 +487,23 @@ Completely upgraded the Indian Stock Search Engine and the ML Stock Rating Syste
   - rontend/src/components/PlatformInfoSections.jsx: Updated tech stack documentation.
 - **Verification**:
   - ite build completed successfully without errors.
+
+## Phase Update: Complete NSE Universe (2,600+ Stocks), 10s Real-Time Polling & Full-Stack Vercel Deployment
+- **Date**: 2026-10-24
+- **Key Enhancements**:
+  1. **All 2,600+ NSE Equities**:
+     - Downloaded and processed official NSE master equities catalog (`EQUITY_L.csv`).
+     - Expanded `backend/src/data/indianStocksUniverse.js` from 769 to 2,696 authentic NSE listed companies.
+     - Automated sector and industry classification across 15+ industrial sectors.
+  2. **Real-Time Values & 10-Second Auto-Polling**:
+     - Upgraded `backend/src/services/marketDataFetcher.js` with Yahoo Finance `.NS` primary and `.BO` secondary exchange fallbacks.
+     - Reduced quote cache TTL to 10 seconds in `backend/src/services/stockService.js` and `backend/src/services/indicesService.js`.
+     - Added 10-second silent background polling in `frontend/src/components/StockDetailsView.jsx` with real-time price tick animations, pulsating emerald radar dot, and manual force-sync button.
+     - Added 10-second market indices polling in `frontend/src/App.jsx`.
+  3. **Full-Stack Vercel Serverless Architecture**:
+     - Created `vercel.json` with static build configuration for Vite frontend, SPA fallback rewrites, and serverless API routing.
+     - Created `api/index.js` Vercel serverless function entrypoint connecting the Express backend with optional lazy MongoDB Atlas connection caching.
+     - Created root `package.json` with build script `npm --prefix frontend install && npm --prefix frontend run build` and production serverless dependencies.
+- **Verification**:
+  - Tested `npm.cmd --prefix frontend run build` (Vite production bundle compiled with 0 errors).
+  - Tested `api/index.js` with simulated HTTP requests for health check and live quote fetching.

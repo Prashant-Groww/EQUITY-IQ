@@ -3,7 +3,7 @@ const NodeCache = require('node-cache');
 const logger = require('../utils/logger');
 
 // Cache indices for 60 seconds
-const indicesCache = new NodeCache({ stdTTL: 60, checkperiod: 30 });
+const indicesCache = new NodeCache({ stdTTL: 10, checkperiod: 5 });
 
 const AXIOS_HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -86,7 +86,7 @@ const getMarketIndices = async () => {
   }
 
   const results = await Promise.all(INDICES_CONFIG.map((item) => fetchSingleIndex(item)));
-  indicesCache.set(cacheKey, results, 60);
+  indicesCache.set(cacheKey, results, 10);
   return results;
 };
 

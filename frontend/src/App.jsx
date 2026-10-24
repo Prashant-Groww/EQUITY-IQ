@@ -112,8 +112,8 @@ export default function App() {
   useEffect(() => {
     checkHealth();
     fetchIndices();
-    // Poll live market indices every 60 seconds
-    const interval = setInterval(fetchIndices, 60000);
+    // Poll live market indices every 10 seconds (real values)
+    const interval = setInterval(fetchIndices, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -133,7 +133,7 @@ export default function App() {
         <div className="flex items-center gap-6 shrink-0 font-medium">
           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            LIVE INDICES
+            LIVE • 10s AUTO-SYNC
           </div>
           {marketIndices.map((idx) => (
             <div key={idx.name} className="flex items-center gap-2 hover:bg-slate-900/80 px-2 py-0.5 rounded-lg transition">

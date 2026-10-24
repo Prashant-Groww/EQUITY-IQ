@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, TrendingUp, TrendingDown, Sparkles, BookOpen, Users } from 'lucide-react';
+import { ArrowLeft, TrendingUp, TrendingDown, Sparkles, BookOpen, Users, RefreshCw, Activity } from 'lucide-react';
 import FinancialMetrics from './FinancialMetrics';
 import MLRatingWidget from './MLRatingWidget';
 import RiskAnalyticsWidget from './RiskAnalyticsWidget';
@@ -9,32 +9,90 @@ export default function StockDetailsView({ symbol, onBackToSearch, onNavigateToR
   const [quote, setQuote] = useState(null);
   const [financials, setFinancials] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState(null);
+  const [priceFlash, setPriceFlash] = useState(null); // 'up' | 'down' | null
 
   useEffect(() => {
     if (!symbol) return;
-    const fetchData = async () => {
+    let isMounted = true;
+
+    // Silent quote refresh for 10-second real-time polling
+    const fetchQuoteOnly = async () => {
+      try {
+        setIsSyncing(true);
+        const res = await fetch(`/api/stocks/${symbol}/quote`);
+        if (res.ok && isMounted) {
+          const qData = await res.json();
+          setQuote((prev) => {
+            if (prev && prev.price != null && qData.price != null && prev.price !== qData.price) {
+              setPriceFlash(qData.price > prev.price ? 'up' : 'down');
+              setTimeout(() => {
+                if (isMounted) setPriceFlash(null);
+              }, 1200);
+            }
+            return qData;
+          });
+          setLastSyncTime(new Date().toLocaleTimeString('en-IN', { hour12: false }));
+        }
+      } catch (err) {
+        console.error('10-second quote polling error:', err);
+      } finally {
+        if (isMounted) setIsSyncing(false);
+      }
+    };
+
+    // Initial comprehensive fetch (quote + financials)
+    const initialFetch = async () => {
       setLoading(true);
       try {
         const [qRes, fRes] = await Promise.all([
           fetch(`/api/stocks/${symbol}/quote`),
           fetch(`/api/stocks/${symbol}/financials`),
         ]);
-        if (qRes.ok) {
+        if (qRes.ok && isMounted) {
           const qData = await qRes.json();
           setQuote(qData);
+          setLastSyncTime(new Date().toLocaleTimeString('en-IN', { hour12: false }));
         }
-        if (fRes.ok) {
+        if (fRes.ok && isMounted) {
           const fData = await fRes.json();
           setFinancials(fData.financials);
         }
       } catch (err) {
         console.error('Failed to fetch stock details:', err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
-    fetchData();
+
+    initialFetch();
+
+    // 10-Second Real-Time Live Polling Interval
+    const pollInterval = setInterval(fetchQuoteOnly, 10000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(pollInterval);
+    };
   }, [symbol]);
+
+  const handleManualRefresh = async () => {
+    if (!symbol || isSyncing) return;
+    try {
+      setIsSyncing(true);
+      const res = await fetch(`/api/stocks/${symbol}/quote`);
+      if (res.ok) {
+        const qData = await res.json();
+        setQuote(qData);
+        setLastSyncTime(new Date().toLocaleTimeString('en-IN', { hour12: false }));
+      }
+    } catch (err) {
+      console.error('Manual refresh error:', err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const isPositive = quote ? (quote.price != null && quote.previousClose != null ? quote.price >= quote.previousClose : true) : true;
   const priceChange = quote?.price != null && quote?.previousClose != null ? quote.price - quote.previousClose : null;
@@ -64,7 +122,7 @@ export default function StockDetailsView({ symbol, onBackToSearch, onNavigateToR
         </div>
       </div>
 
-      {/* 1. STOCK HEADER CARD */}
+      {/* 1. STOCK HEADER CARD WITH 10S LIVE POLLING BADGE */}
       <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="flex items-start gap-4">
           <div className="h-14 w-14 rounded-2xl bg-blue-100/80 border border-blue-200 text-blue-700 font-black text-lg flex items-center justify-center shrink-0">
@@ -91,11 +149,43 @@ export default function StockDetailsView({ symbol, onBackToSearch, onNavigateToR
           </div>
         </div>
 
-        {/* Live Price Header & Analyze with AI */}
-        <div className="flex flex-col items-start lg:items-end gap-3 shrink-0">
-          <div className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
+        {/* Live Price Header & 10s Real-Time Badge */}
+        <div className="flex flex-col items-start lg:items-end gap-2 shrink-0">
+          
+          {/* Live Indicator Pill with Pulsing Radar Dot */}
+          <div className="flex items-center gap-2">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-[11px] font-bold">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span>LIVE • 10s Auto-Sync</span>
+            </div>
+
+            {lastSyncTime && (
+              <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
+                Synced {lastSyncTime}
+              </span>
+            )}
+
+            <button
+              onClick={handleManualRefresh}
+              disabled={isSyncing}
+              title="Force Refresh Live Quote"
+              className="p-1 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 transition cursor-pointer"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin text-blue-600' : ''}`} />
+            </button>
+          </div>
+
+          {/* Large Price with Pulse on Tick */}
+          <div className={`text-3xl sm:text-4xl font-black tracking-tight transition-colors duration-300 ${
+            priceFlash === 'up' ? 'text-emerald-600' : priceFlash === 'down' ? 'text-rose-600' : 'text-slate-900'
+          }`}>
             {quote?.price != null ? formatINR(quote.price) : 'Data unavailable'}
           </div>
+
+          {/* Change Pill */}
           {priceChange != null ? (
             <div
               className={`flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-xl border ${
@@ -144,11 +234,11 @@ export default function StockDetailsView({ symbol, onBackToSearch, onNavigateToR
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-slate-100 text-xs">
             <div>
               <span className="text-slate-400 block text-[10px]">Market Cap Category</span>
-              <span className="font-bold text-slate-900">{financials?.marketCapCategory || 'Large Cap'}</span>
+              <span className="font-bold text-slate-900">{financials?.marketCapCategory || quote?.marketCapCategory || 'Large Cap'}</span>
             </div>
             <div>
               <span className="text-slate-400 block text-[10px]">Industry</span>
-              <span className="font-bold text-slate-900">{financials?.industry || 'Commercial'}</span>
+              <span className="font-bold text-slate-900">{financials?.industry || quote?.industry || 'Commercial'}</span>
             </div>
             <div>
               <span className="text-slate-400 block text-[10px]">Book Value</span>
